@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'core',
     'file_management',
     'widget_tweaks',
+    'project_management',
 ]
 
 MIDDLEWARE = [
@@ -129,6 +130,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # 登录
 AUTH_USER_MODEL = 'users.User'
 LOGIN_REDIRECT_URL = '/'  # 登录成功后重定向到首页
-LOGIN_URL = 'login'
+LOGIN_URL = 'users:login' 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

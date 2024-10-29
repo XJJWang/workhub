@@ -7,6 +7,7 @@ from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
 
+@login_required
 def file_list(request):
     search_query = request.GET.get('search', '')
     file_type = request.GET.get('file_type', '')
@@ -25,7 +26,7 @@ def file_list(request):
         'file_type': file_type,
     }
     return render(request, 'file_management/file_list.html', context)
-
+@login_required
 def upload_file(request):
     if request.method == 'POST':
         try:
