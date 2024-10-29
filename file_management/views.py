@@ -7,6 +7,8 @@ from django.db.models import Q
 
 from django.http import JsonResponse
 
+from project_management.models import Project
+
 @custom_login_required
 def file_list(request):
     search_query = request.GET.get('search', '')
@@ -28,6 +30,9 @@ def file_list(request):
     return render(request, 'file_management/file_list.html', context)
 @custom_login_required
 def upload_file(request):
+    if request.method == 'GET':
+        projects = Project.objects.all().order_by('-year', 'name')
+        return render(request, 'file_management/upload_file.html', {'projects': projects})
     if request.method == 'POST':
         try:
             if 'file' not in request.FILES:

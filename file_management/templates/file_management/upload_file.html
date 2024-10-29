@@ -3,6 +3,7 @@
 {% block content %}
 <div class="upload-container">
     <h1>上传文件</h1>
+    
     <form action="{% url 'file_management:upload_file' %}" 
           class="dropzone" 
           id="myDropzone">
@@ -11,6 +12,16 @@
             <input name="file" type="file" multiple />
         </div>
     </form>
+
+    <div class="form-group mt-4">
+        <label for="project">选择项目</label>
+        <select id="project" class="form-control" required>
+            <option value="">请选择项目</option>
+            {% for project in projects %}
+                <option value="{{ project.id }}">{{ project.year }}-{{ project.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
     
     <div class="form-group mt-4">
         <label for="description">文件描述</label>
@@ -231,6 +242,48 @@
         object-fit: cover;
         border-radius: 8px;
     }
+
+    /* 添加项目选择下拉框的样式 */
+    #project {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        font-size: 1rem;
+    }
+
+    /* 文件类型图标颜色 */
+    .dropzone .dz-preview .dz-image i.fa-file-word {
+        color: #2b579a;  /* Word蓝色 */
+    }
+
+    .dropzone .dz-preview .dz-image i.fa-file-excel {
+        color: #217346;  /* Excel绿色 */
+    }
+
+    .dropzone .dz-preview .dz-image i.fa-file-powerpoint {
+        color: #d24726;  /* PPT橙红色 */
+    }
+
+    .dropzone .dz-preview .dz-image i.fa-file-pdf {
+        color: #f40f02;  /* PDF红色 */
+    }
+
+    .dropzone .dz-preview .dz-image i.fa-file-video {
+        color: #7b68ee;  /* 视频紫色 */
+    }
+
+    .dropzone .dz-preview .dz-image i.fa-file-audio {
+        color: #ff69b4;  /* 音频粉色 */
+    }
+
+    .dropzone .dz-preview .dz-image i.fa-file-alt {
+        color: #696969;  /* 文本文件灰色 */
+    }
+
+    .dropzone .dz-preview .dz-image i.fa-file {
+        color: #a9a9a9;  /* 默认文件图标浅灰色 */
+    }
 </style>
 
 <!-- 引入 Dropzone CSS 和 JS -->
@@ -260,6 +313,7 @@
             previewTemplate: `
                 <div class="dz-preview dz-file-preview">
                     <div class="dz-image">
+                        <img data-dz-thumbnail />
                         <i class="fas fa-file"></i>
                     </div>
                     <div class="dz-details">
@@ -280,35 +334,51 @@
                         myDropzone.removeFile(myDropzone.files[0]);
                     }
                     
-                    // 根据文件类型设置不同的图标
-                    let icon = file.previewElement.querySelector(".dz-image i");
+                    const previewElement = file.previewElement;
+                    const icon = previewElement.querySelector(".dz-image i");
+                    const img = previewElement.querySelector(".dz-image img");
+                    
                     if (file.type.match(/image\/.*/)) {
-                        icon.className = "fas fa-image";
-                    } else if (file.type.match(/application\/pdf/)) {
-                        icon.className = "fas fa-file-pdf";
-                    } else if (file.type.match(/application\/msword/) || file.type.match(/application\/vnd.openxmlformats-officedocument.wordprocessingml.*/)) {
-                        icon.className = "fas fa-file-word";
-                    } else if (file.type.match(/application\/vnd.ms-excel/) || file.type.match(/application\/vnd.openxmlformats-officedocument.spreadsheetml.*/)) {
-                        icon.className = "fas fa-file-excel";
-                    } else if (file.type.match(/application\/vnd.ms-powerpoint/) || file.type.match(/application\/vnd.openxmlformats-officedocument.presentationml.*/)) {
-                        icon.className = "fas fa-file-powerpoint";
-                    } else if (file.type.match(/text\/.*/)) {
-                        icon.className = "fas fa-file-alt";
-                    } else if (file.type.match(/video\/.*/)) {
-                        icon.className = "fas fa-file-video";
-                    } else if (file.type.match(/audio\/.*/)) {
-                        icon.className = "fas fa-file-audio";
+                        // 如果是图片，隐藏图标，显示预览图
+                        icon.style.display = "none";
+                        img.style.display = "block";
                     } else {
-                        icon.className = "fas fa-file";
+                        // 如果不是图片，隐藏预览图，显示图标
+                        img.style.display = "none";
+                        icon.style.display = "flex";
+                        
+                        // 设置对应的文件类型图标和颜色
+                        if (file.type.match(/application\/pdf/)) {
+                            icon.className = "fas fa-file-pdf";
+                        } else if (file.type.match(/application\/msword/) || 
+                                     file.type.match(/application\/vnd.openxmlformats-officedocument.wordprocessingml.*/)) {
+                            icon.className = "fas fa-file-word";
+                        } else if (file.type.match(/application\/vnd.ms-excel/) || 
+                                     file.type.match(/application\/vnd.openxmlformats-officedocument.spreadsheetml.*/)) {
+                            icon.className = "fas fa-file-excel";
+                        } else if (file.type.match(/application\/vnd.ms-powerpoint/) || 
+                                     file.type.match(/application\/vnd.openxmlformats-officedocument.presentationml.*/)) {
+                            icon.className = "fas fa-file-powerpoint";
+                        } else if (file.type.match(/text\/.*/)) {
+                            icon.className = "fas fa-file-alt";
+                        } else if (file.type.match(/video\/.*/)) {
+                            icon.className = "fas fa-file-video";
+                        } else if (file.type.match(/audio\/.*/)) {
+                            icon.className = "fas fa-file-audio";
+                        } else {
+                            icon.className = "fas fa-file";
+                        }
                     }
                 });
             }
         });
 
-        // 发送前添加额外数据
+        // 修改发送前添加额外数据的处理
         myDropzone.on("sending", function(file, xhr, formData) {
             const description = document.querySelector("#description").value.trim();
+            const projectId = document.querySelector("#project").value;
             formData.append("description", description);
+            formData.append("project_id", projectId);
         });
 
         // 上传成功的处理
@@ -323,7 +393,7 @@
             alert(typeof errorMessage === 'string' ? errorMessage : '上传失败，请重试');
         });
 
-        // 点击上传按钮时的处理
+        // 修改提交验证
         document.querySelector("#submit-all").addEventListener("click", function(e) {
             e.preventDefault();
             
@@ -335,6 +405,12 @@
             const description = document.querySelector("#description").value.trim();
             if (!description) {
                 alert("请输入文件描述");
+                return;
+            }
+
+            const projectId = document.querySelector("#project").value;
+            if (!projectId) {
+                alert("请选择项目");
                 return;
             }
 
