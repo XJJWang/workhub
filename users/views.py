@@ -4,8 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_protect
-from django.contrib.auth.decorators import login_required
-
+from users.decorators import custom_login_required 
 from .forms import RegisterForm, UserProfileForm
 
 User = get_user_model()
@@ -50,7 +49,7 @@ def register_view(request):
     return render(request, 'users/register.html', {'register_form': form})
 
 
-@login_required
+@custom_login_required
 def profile_edit(request):
     if request.method == 'POST':
         form = UserProfileForm(request.POST, instance=request.user)
@@ -63,6 +62,6 @@ def profile_edit(request):
     return render(request, 'users/profile_edit.html', {'form': form})
 
 
-@login_required
+@custom_login_required
 def profile_view(request):
     return render(request, 'users/profile.html', {'user': request.user})

@@ -2,12 +2,12 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.core.files.storage import FileSystemStorage
 from django.contrib import messages
 from .models import UploadedFile
-
+from users.decorators import custom_login_required  # 导入自定义装饰器
 from django.db.models import Q
-from django.contrib.auth.decorators import login_required
+
 from django.http import JsonResponse
 
-@login_required
+@custom_login_required
 def file_list(request):
     search_query = request.GET.get('search', '')
     file_type = request.GET.get('file_type', '')
@@ -26,7 +26,7 @@ def file_list(request):
         'file_type': file_type,
     }
     return render(request, 'file_management/file_list.html', context)
-@login_required
+@custom_login_required
 def upload_file(request):
     if request.method == 'POST':
         try:
@@ -59,7 +59,7 @@ def upload_file(request):
             
     return render(request, 'file_management/upload_file.html')
 
-@login_required
+@custom_login_required
 def delete_file(request, file_id):
     file = get_object_or_404(UploadedFile, id=file_id)
     
