@@ -1,12 +1,161 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<h1>上传文件</h1>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="file" name="file" required>
-    <input type="text" name="description" placeholder="文件描述" required>
-    <button type="submit">上传</button>
-</form>
+<div class="upload-container">
+    <h1>上传文件</h1>
+    <form action="{% url 'file_management:upload_file' %}" 
+          class="dropzone" 
+          id="myDropzone">
+        {% csrf_token %}
+        <div class="fallback">
+            <input name="file" type="file" multiple />
+        </div>
+    </form>
+    
+    <div class="form-group mt-4">
+        <label for="description">文件描述</label>
+        <textarea id="description" class="form-control" rows="3" placeholder="请输入文件描述"></textarea>
+    </div>
+    
+    <button id="submit-all" class="upload-button mt-3">上传文件</button>
+</div>
+
+<style>
+    .upload-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 20px;
+    }
+
+    .upload-container h1 {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .dropzone {
+        border: 2px dashed #0d6efd !important;
+        border-radius: 15px;
+        background: #f8f9fa !important;
+    }
+
+    .dropzone .dz-message {
+        margin: 2em 0;
+    }
+
+    .dropzone .dz-message .dz-button {
+        color: #0d6efd;
+        font-size: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+    }
+
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ced4da;
+        border-radius: 8px;
+        resize: vertical;
+    }
+
+    .upload-button {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .upload-button:hover {
+        background-color: #0b5ed7;
+    }
+
+    /* Dropzone 预览框样式 */
+    .dropzone .dz-preview {
+        margin: 10px;
+    }
+
+    .dropzone .dz-preview .dz-image {
+        border-radius: 10px;
+    }
+</style>
+
+<!-- 引入 Dropzone CSS 和 JS -->
+<link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+
+<script>
+    Dropzone.autoDiscover = false;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        let myDropzone = new Dropzone("#myDropzone", {
+            url: "{% url 'file_management:upload_file' %}",
+            autoProcessQueue: false,
+            addRemoveLinks: true,
+            parallelUploads: 1,
+            maxFiles: 1,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            dictDefaultMessage: `<i class="fas fa-cloud-upload-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                                <br>将文件拖放到这里或点击选择文件`,
+            dictRemoveFile: "删除文件",
+            dictCancelUpload: "取消上传",
+            dictFileTooBig: "文件太大了",
+            dictInvalidFileType: "不支持此类型文件",
+        });
+
+        // 添加文件时的处理
+        myDropzone.on("addedfile", function(file) {
+            if (myDropzone.files.length > 1) {
+                myDropzone.removeFile(myDropzone.files[0]);
+            }
+        });
+
+        // 上传成功的处理
+        myDropzone.on("success", function(file, response) {
+            window.location.href = "{% url 'file_management:file_list' %}";
+        });
+
+        // 上传失败的处理
+        myDropzone.on("error", function(file, errorMessage) {
+            alert(errorMessage);
+        });
+
+        // 点击上传按钮时的处理
+        document.querySelector("#submit-all").addEventListener("click", function(e) {
+            e.preventDefault();
+            
+            if (myDropzone.files.length === 0) {
+                alert("请选择要上传的文件");
+                return;
+            }
+
+            const description = document.querySelector("#description").value.trim();
+            if (!description) {
+                alert("请输入文件描述");
+                return;
+            }
+
+            // 将描述添加到表单数据中
+            myDropzone.files[0].formData = {
+                description: description
+            };
+
+            myDropzone.processQueue();
+        });
+    });
+</script>
 {% endblock %}
 
