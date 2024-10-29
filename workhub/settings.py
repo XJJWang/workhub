@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'users',
     'core',
     'file_management',
+    'widget_tweaks',
 ]
 
 MIDDLEWARE = [

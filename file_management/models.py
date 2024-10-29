@@ -4,9 +4,15 @@ from django.contrib.auth import get_user_model  # 导入get_user_model
 
 class UploadedFile(models.Model):
     file = models.FileField(upload_to='uploads/')  # 文件字段
-    description = models.CharField(max_length=255)  # 描述字段
+    file_name = models.CharField(max_length=255, blank=True)  # 添加文件名字段
+    description = models.CharField(max_length=255, blank=True, null=True)  # 修改这里，允许为空
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # 更新为使用settings.AUTH_USER_MODEL
     uploaded_at = models.DateTimeField(auto_now_add=True)  # 上传时间
 
+    def save(self, *args, **kwargs):
+        if not self.file_name and self.file:
+            self.file_name = self.file.name
+        super().save(*args, **kwargs)
+
     def __str__(self):
-        return self.file.name
+        return self.file_name or self.file.name

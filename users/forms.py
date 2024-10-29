@@ -70,3 +70,20 @@ class RegisterForm(UserCreationForm):
             invitation.used_at = timezone.now()
             invitation.save()
         return user
+
+
+class UserProfileForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['real_name', 'email', 'phone_number', 'birth_date', 'bio']
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date'}),
+            'bio': forms.Textarea(attrs={'rows': 4}),
+        }
+        labels = {
+            'real_name': '真实姓名',
+            'email': '电子邮箱',
+            'phone_number': '手机号码',
+            'birth_date': '出生日期',
+            'bio': '个人简介',
+        }

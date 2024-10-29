@@ -36,10 +36,17 @@
         border: 2px dashed #0d6efd !important;
         border-radius: 15px;
         background: #f8f9fa !important;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
     }
 
     .dropzone .dz-message {
-        margin: 2em 0;
+        margin: 0;
+        text-align: center;
     }
 
     .dropzone .dz-message .dz-button {
@@ -84,10 +91,145 @@
     /* Dropzone 预览框样式 */
     .dropzone .dz-preview {
         margin: 10px;
+        min-height: 120px;
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .dropzone .dz-preview .dz-image {
         border-radius: 10px;
+        width: 120px;
+        height: 120px;
+        position: relative;
+        display: block;
+        z-index: 10;
+        overflow: hidden;
+    }
+
+    .dropzone .dz-preview .dz-details {
+        padding: 1em;
+        position: relative;
+        z-index: 20;
+        text-align: center;
+    }
+
+    .dropzone .dz-preview .dz-details .dz-info {
+        background: rgba(255, 255, 255, 0.9);
+        padding: 5px 10px;
+        border-radius: 5px;
+        margin-top: 5px;
+    }
+
+    .dropzone .dz-preview .dz-details .dz-filename {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: #333;
+        font-weight: bold;
+        margin-bottom: 3px;
+    }
+
+    .dropzone .dz-preview .dz-details .dz-size {
+        font-size: 0.9em;
+        color: #666;
+    }
+
+    .dropzone .dz-preview .dz-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .dropzone .dz-preview .dz-remove {
+        margin-top: 10px;
+        display: block;
+        text-align: center;
+        color: #dc3545;
+        text-decoration: none;
+        font-size: 0.9em;
+    }
+
+    .dropzone .dz-preview .dz-remove:hover {
+        text-decoration: underline;
+    }
+
+    .dropzone .dz-preview .dz-progress {
+        width: 100%;
+        height: 6px;
+        background: #f0f0f0;
+        border-radius: 3px;
+        margin-top: 10px;
+    }
+
+    .dropzone .dz-preview .dz-progress .dz-upload {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: #0d6efd;
+        border-radius: 3px;
+        transition: width 0.3s ease;
+    }
+
+    .dropzone .dz-preview .dz-success-mark,
+    .dropzone .dz-preview .dz-error-mark {
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .dropzone .dz-preview .dz-success-mark {
+        color: #28a745;
+    }
+
+    .dropzone .dz-preview .dz-error-mark {
+        color: #dc3545;
+    }
+
+    /* 文件类型图标样式 */
+    .dropzone .dz-preview .dz-image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f9fa;
+        width: 120px;
+        height: 120px;
+    }
+
+    .dropzone .dz-preview .dz-image i {
+        font-size: 4.5rem;
+        color: #0d6efd;
+        padding: 20px;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f8f9fa;
+    }
+
+    .dropzone .dz-preview.dz-file-preview .dz-image {
+        border-radius: 8px;
+    }
+
+    /* 调整文件名显示位置 */
+    .dropzone .dz-preview .dz-details {
+        padding-top: 0.5em;
+        text-align: center;
+    }
+
+    .dropzone .dz-preview .dz-details .dz-filename {
+        margin-top: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .dropzone .dz-preview .dz-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 8px;
     }
 </style>
 
@@ -106,7 +248,8 @@
             parallelUploads: 1,
             maxFiles: 1,
             headers: {
-                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest'
             },
             dictDefaultMessage: `<i class="fas fa-cloud-upload-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
                                 <br>将文件拖放到这里或点击选择文件`,
@@ -114,23 +257,70 @@
             dictCancelUpload: "取消上传",
             dictFileTooBig: "文件太大了",
             dictInvalidFileType: "不支持此类型文件",
+            previewTemplate: `
+                <div class="dz-preview dz-file-preview">
+                    <div class="dz-image">
+                        <i class="fas fa-file"></i>
+                    </div>
+                    <div class="dz-details">
+                        <div class="dz-info">
+                            <div class="dz-filename"><span data-dz-name></span></div>
+                            <div class="dz-size"><span data-dz-size></span></div>
+                        </div>
+                    </div>
+                    <div class="dz-progress"><span class="dz-upload" data-dz-uploadprogress></span></div>
+                    <div class="dz-success-mark"><span>✔</span></div>
+                    <div class="dz-error-mark"><span>✘</span></div>
+                    <div class="dz-error-message"><span data-dz-errormessage></span></div>
+                </div>
+            `,
+            init: function() {
+                this.on("addedfile", function(file) {
+                    if (myDropzone.files.length > 1) {
+                        myDropzone.removeFile(myDropzone.files[0]);
+                    }
+                    
+                    // 根据文件类型设置不同的图标
+                    let icon = file.previewElement.querySelector(".dz-image i");
+                    if (file.type.match(/image\/.*/)) {
+                        icon.className = "fas fa-image";
+                    } else if (file.type.match(/application\/pdf/)) {
+                        icon.className = "fas fa-file-pdf";
+                    } else if (file.type.match(/application\/msword/) || file.type.match(/application\/vnd.openxmlformats-officedocument.wordprocessingml.*/)) {
+                        icon.className = "fas fa-file-word";
+                    } else if (file.type.match(/application\/vnd.ms-excel/) || file.type.match(/application\/vnd.openxmlformats-officedocument.spreadsheetml.*/)) {
+                        icon.className = "fas fa-file-excel";
+                    } else if (file.type.match(/application\/vnd.ms-powerpoint/) || file.type.match(/application\/vnd.openxmlformats-officedocument.presentationml.*/)) {
+                        icon.className = "fas fa-file-powerpoint";
+                    } else if (file.type.match(/text\/.*/)) {
+                        icon.className = "fas fa-file-alt";
+                    } else if (file.type.match(/video\/.*/)) {
+                        icon.className = "fas fa-file-video";
+                    } else if (file.type.match(/audio\/.*/)) {
+                        icon.className = "fas fa-file-audio";
+                    } else {
+                        icon.className = "fas fa-file";
+                    }
+                });
+            }
         });
 
-        // 添加文件时的处理
-        myDropzone.on("addedfile", function(file) {
-            if (myDropzone.files.length > 1) {
-                myDropzone.removeFile(myDropzone.files[0]);
-            }
+        // 发送前添加额外数据
+        myDropzone.on("sending", function(file, xhr, formData) {
+            const description = document.querySelector("#description").value.trim();
+            formData.append("description", description);
         });
 
         // 上传成功的处理
         myDropzone.on("success", function(file, response) {
-            window.location.href = "{% url 'file_management:file_list' %}";
+            setTimeout(function() {
+                window.location.href = "{% url 'file_management:file_list' %}";
+            }, 500);  // 延迟半秒跳转，确保文件完全上传
         });
 
         // 上传失败的处理
         myDropzone.on("error", function(file, errorMessage) {
-            alert(errorMessage);
+            alert(typeof errorMessage === 'string' ? errorMessage : '上传失败，请重试');
         });
 
         // 点击上传按钮时的处理
@@ -147,11 +337,6 @@
                 alert("请输入文件描述");
                 return;
             }
-
-            // 将描述添加到表单数据中
-            myDropzone.files[0].formData = {
-                description: description
-            };
 
             myDropzone.processQueue();
         });

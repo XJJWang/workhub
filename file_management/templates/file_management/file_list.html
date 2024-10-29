@@ -1,17 +1,57 @@
 {% extends 'base.html' %}
-{% load file_management_tags %}
+
+{% block title %}文件列表{% endblock %}
 
 {% block content %}
-<div class="file-management-container">
-    <div class="header">
-        <h1>文件管理</h1>
-        <a href="{% url 'file_management:upload_file' %}" class="upload-btn">
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>文件列表</h2>
+        <a href="{% url 'file_management:upload_file' %}" class="btn btn-primary">
             <i class="fas fa-upload"></i> 上传文件
         </a>
     </div>
 
-    <div class="file-table-container">
-        <table class="file-table">
+    <!-- 搜索表单 -->
+    <form method="get" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" 
+                       placeholder="搜索文件名..." value="{{ search_query }}">
+            </div>
+            <div class="col-md-2">
+                <select name="file_type" class="form-select">
+                    <option value="">所有类型</option>
+                    <option value="pdf" {% if file_type == 'pdf' %}selected{% endif %}>PDF</option>
+                    <option value="doc" {% if file_type == 'doc' %}selected{% endif %}>Word</option>
+                    <option value="xls" {% if file_type == 'xls' %}selected{% endif %}>Excel</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">搜索</button>
+            </div>
+            {% if search_query or file_type %}
+            <div class="col-md-2">
+                <a href="{% url 'file_management:file_list' %}" class="btn btn-secondary w-100">清除</a>
+            </div>
+            {% endif %}
+        </div>
+    </form>
+
+    <!-- 搜索结果提示 -->
+    {% if search_query or file_type %}
+    <div class="mb-3">
+        <p>
+            {% if search_query %}搜索 "{{ search_query }}" {% endif %}
+            {% if file_type %}文件类型: {{ file_type }} {% endif %}
+            的结果：找到 {{ files|length }} 个文件
+        </p>
+    </div>
+    {% endif %}
+
+    <!-- 文件列表表格 -->
+    {% if files %}
+    <div class="table-responsive">
+        <table class="table table-hover">
             <thead>
                 <tr>
                     <th>文件名</th>
@@ -24,159 +64,33 @@
             <tbody>
                 {% for file in files %}
                 <tr>
+                    <td>{{ file.file_name }}</td>
+                    <td>{{ file.description|default:"-" }}</td>
+                    <td>{{ file.uploaded_by.real_name|default:file.uploaded_by.username }}</td>
+                    <td>{{ file.uploaded_at|date:"Y-m-d H:i" }}</td>
                     <td>
-                        <div class="file-name">
-                            <i class="far fa-file"></i>
-                            <span>{{ file.file.name|cut:"uploads/"|truncatechars:30 }}</span>
+                        <div class="btn-group">
+                            <a href="{{ file.file.url }}" class="btn btn-sm btn-outline-primary" target="_blank">
+                                <i class="fas fa-download"></i> 下载
+                            </a>
+                            {% if request.user == file.uploaded_by or request.user.is_staff %}
+                            <a href="{% url 'file_management:delete_file' file.id %}" 
+                               class="btn btn-sm btn-outline-danger"
+                               onclick="return confirm('确定要删除这个文件吗？');">
+                                <i class="fas fa-trash"></i> 删除
+                            </a>
+                            {% endif %}
                         </div>
                     </td>
-                    <td>{{ file.description|truncatechars:50 }}</td>
-                    <td>{{ file.uploaded_by.username }}</td>
-                    <td>{{ file.uploaded_at|date:"Y-m-d H:i" }}</td>
-                    <td class="actions">
-                        <a href="{{ file.file.url }}" class="action-btn download-btn" download title="下载">
-                            <i class="fas fa-download"></i> 下载
-                        </a>
-                        {% if file.file.name|lower|endswith:'.pdf' or file.file.name|lower|endswith:'.jpg' or file.file.name|lower|endswith:'.png' or file.file.name|lower|endswith:'.gif' %}
-                        <a href="{{ file.file.url }}" class="action-btn preview-btn" target="_blank" title="预览">
-                            <i class="fas fa-eye"></i> 预览
-                        </a>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="5" class="no-files">没有上传的文件</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    {% else %}
+    <div class="alert alert-info">
+        暂无文件记录
+    </div>
+    {% endif %}
 </div>
-
-<style>
-    .file-management-container {
-        max-width: 1200px;
-        margin: 2rem auto;
-        padding: 0 20px;
-    }
-
-    .header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 2rem;
-    }
-
-    .upload-btn {
-        background-color: #0d6efd;
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 6px;
-        text-decoration: none;
-        transition: background-color 0.3s;
-    }
-
-    .upload-btn:hover {
-        background-color: #0b5ed7;
-        color: white;
-    }
-
-    .file-table-container {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        overflow-x: auto;
-    }
-
-    .file-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .file-table th {
-        background-color: #f8f9fa;
-        padding: 1rem;
-        text-align: left;
-        font-weight: 600;
-        color: #495057;
-    }
-
-    .file-table td {
-        padding: 1rem;
-        border-top: 1px solid #dee2e6;
-    }
-
-    .file-name {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #0d6efd;
-        cursor: pointer;
-    }
-
-    .file-name i {
-        font-size: 1.2rem;
-        color: #6c757d;
-    }
-
-    .actions {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .action-btn {
-        padding: 0.6rem 1rem;
-        border-radius: 4px;
-        color: white;
-        text-decoration: none;
-        font-size: 1rem;
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        min-width: 90px;
-        justify-content: center;
-    }
-
-    .download-btn {
-        background-color: #198754;
-    }
-
-    .preview-btn {
-        background-color: #0dcaf0;
-    }
-
-    .action-btn i {
-        font-size: 1.1rem;
-    }
-
-    .action-btn:hover {
-        opacity: 0.9;
-        color: white;
-        transform: translateY(-1px);
-        transition: all 0.2s;
-    }
-
-    .no-files {
-        text-align: center;
-        color: #6c757d;
-        font-style: italic;
-    }
-
-    /* 响应式设计 */
-    @media (max-width: 768px) {
-        .file-table th:nth-child(3),
-        .file-table td:nth-child(3) {
-            display: none;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .file-table th:nth-child(4),
-        .file-table td:nth-child(4) {
-            display: none;
-        }
-    }
-</style>
-
 {% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}个人资料{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">个人资料</h4>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <strong>用户名：</strong> {{ user.username }}
+                </div>
+                <div class="mb-3">
+                    <strong>真实姓名：</strong> {{ user.real_name|default:"未设置" }}
+                </div>
+                <div class="mb-3">
+                    <strong>电子邮箱：</strong> {{ user.email|default:"未设置" }}
+                </div>
+                <div class="mb-3">
+                    <strong>手机号码：</strong> {{ user.phone_number|default:"未设置" }}
+                </div>
+                <div class="mb-3">
+                    <strong>出生日期：</strong> {{ user.birth_date|default:"未设置" }}
+                </div>
+                <div class="mb-3">
+                    <strong>个人简介：</strong>
+                    <p>{{ user.bio|default:"未设置"|linebreaks }}</p>
+                </div>
+                <a href="{% url 'users:profile_edit' %}" class="btn btn-primary">编辑资料</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

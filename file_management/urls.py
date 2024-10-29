@@ -5,5 +5,6 @@ app_name = 'file_management'
 
 urlpatterns = [
     path('', views.file_list, name='file_list'),
-    path('upload/', views.upload_file, name='upload_file'),  # 添加上传文件的路径
+    path('upload/', views.upload_file, name='upload_file'),
+    path('delete/<int:file_id>/', views.delete_file, name='delete_file'),
 ]

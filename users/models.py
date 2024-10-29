@@ -7,6 +7,7 @@ import string
 
 
 class User(AbstractUser):
+    real_name = models.CharField(max_length=50, blank=True, verbose_name='真实姓名')
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     bio = models.TextField(max_length=500, blank=True)
     birth_date = models.DateField(null=True, blank=True)

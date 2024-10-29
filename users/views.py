@@ -4,8 +4,9 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.decorators import login_required
 
-from .forms import RegisterForm
+from .forms import RegisterForm, UserProfileForm
 
 User = get_user_model()
 
@@ -47,3 +48,21 @@ def register_view(request):
     else:
         form = RegisterForm()
     return render(request, 'users/register.html', {'register_form': form})
+
+
+@login_required
+def profile_edit(request):
+    if request.method == 'POST':
+        form = UserProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, '个人资料已更新成功！')
+            return redirect('users:profile')
+    else:
+        form = UserProfileForm(instance=request.user)
+    return render(request, 'users/profile_edit.html', {'form': form})
+
+
+@login_required
+def profile_view(request):
+    return render(request, 'users/profile.html', {'user': request.user})
