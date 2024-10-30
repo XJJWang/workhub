@@ -1,31 +1,28 @@
 from django.db import models
 from django.conf import settings  # 导入settings
 from django.contrib.auth import get_user_model  # 导入get_user_model
+from mptt.models import MPTTModel
 
-class FileCategory(models.Model):
+class FileCategory(MPTTModel):
     name = models.CharField(max_length=100, verbose_name='分类名称')
-    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, 
-                             related_name='children', verbose_name='父分类')
-    project = models.ForeignKey('project_management.Project', on_delete=models.CASCADE,
-                              null=True, blank=True,  # 添加这两个参数
-                              verbose_name='所属项目')
-    created_at = models.DateTimeField(auto_now_add=True)
-    
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='children', verbose_name='父分类')
+    project = models.ForeignKey('project_management.Project', on_delete=models.CASCADE, verbose_name='所属项目')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='创建时间')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+
+    class MPTTMeta:
+        order_insertion_by = ['name']
+
     class Meta:
         verbose_name = '文件分类'
         verbose_name_plural = '文件分类'
-        ordering = ['name']
-    
+
     def __str__(self):
-        if self.parent:
-            return f'{self.parent} > {self.name}'
         return self.name
-    
-    def get_full_path(self):
-        """获取完整的分类路径"""
-        if self.parent:
-            return f'{self.parent.get_full_path()} > {self.name}'
-        return self.name
+
+    # 添加获取关联文件的方法
+    def get_files(self):
+        return UploadedFile.objects.filter(category=self)
 
 class UploadedFile(models.Model):
     file = models.FileField(upload_to='uploads/%Y/%m/%d/', verbose_name='文件')

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'file_management',
     'widget_tweaks',
     'project_management',
+    'mptt',
 ]
 
 MIDDLEWARE = [

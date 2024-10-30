@@ -123,16 +123,32 @@
     }
 
     .jstree-default .jstree-icon.jstree-ocl {
-        color: #6c757d;  /* Bootstrap 次要文本颜色 */
+        font-family: "Font Awesome 5 Free" !important;
+        font-weight: 900;
+        background-image: none;  /* 移除默认图标 */
+        font-size: 0.8rem;
+        color: #6c757d;  /* Bootstrap secondary color */
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        text-align: center;
         transition: all 0.2s ease;
     }
 
-    .jstree-default .jstree-closed > .jstree-ocl {
-        transform: rotate(-90deg);
+    .jstree-default .jstree-closed > .jstree-ocl::before {
+        content: "\f054";  /* Font Awesome 的右箭头图标 */
+        display: inline-block;
+        transition: transform 0.2s ease;
     }
 
-    .jstree-default .jstree-open > .jstree-ocl {
-        transform: rotate(0deg);
+    .jstree-default .jstree-open > .jstree-ocl::before {
+        content: "\f078";  /* Font Awesome 的下箭头图标 */
+        display: inline-block;
+    }
+
+    .jstree-default .jstree-ocl:hover {
+        color: #0d6efd;  /* Bootstrap primary color */
+        cursor: pointer;
     }
 
     .jstree-default .jstree-themeicon-custom {
@@ -142,6 +158,8 @@
 
     .jstree-default .jstree-node {
         margin-left: 15px;
+        min-height: 28px;
+        line-height: 28px;
     }
 
     .jstree-default .jstree-container-ul > .jstree-node {
@@ -190,6 +208,184 @@
     .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-children > .jstree-node > .jstree-children .jstree-clicked {
         background: #f0e1ff !important;  /* 第四层级及更深 */
     }
+
+    /* 更新展开/折叠图标的样式 */
+    .jstree-default .jstree-icon.jstree-ocl {
+        font-family: "Font Awesome 5 Free" !important;
+        font-weight: 900;
+        background-image: none;  /* 移除默认图标 */
+        font-size: 0.8rem;
+        color: #6c757d;  /* Bootstrap secondary color */
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        text-align: center;
+        transition: all 0.2s ease;
+    }
+
+    /* 添加展开/折叠的 Font Awesome 图标 */
+    .jstree-default .jstree-closed > .jstree-ocl::before {
+        content: "\f054";  /* Font Awesome 的右箭头图标 */
+        display: inline-block;
+        transition: transform 0.2s ease;
+    }
+
+    .jstree-default .jstree-open > .jstree-ocl::before {
+        content: "\f078";  /* Font Awesome 的下箭头图标 */
+        display: inline-block;
+    }
+
+    /* 悬停效果 */
+    .jstree-default .jstree-ocl:hover {
+        color: #0d6efd;  /* Bootstrap primary color */
+        cursor: pointer;
+    }
+
+    /* 调整节点间距和对齐 */
+    .jstree-default .jstree-node {
+        margin-left: 15px;
+        min-height: 28px;
+        line-height: 28px;
+    }
+
+    .jstree-default .jstree-anchor {
+        height: 28px;
+        line-height: 28px;
+        padding: 0 4px;
+    }
+
+    /* 确保图标垂直居中 */
+    .jstree-default .jstree-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* 更新目录树样式 */
+    .jstree-default {
+        --tree-line-color: #e9ecef;  /* 使用 Bootstrap 的浅灰色 */
+        --icon-size: 16px;
+    }
+
+    /* 移除默认的连接线和图标 */
+    .jstree-default .jstree-icon.jstree-ocl {
+        background: none;
+        font-size: var(--icon-size);
+        width: 24px;
+        height: 24px;
+        line-height: 24px;
+        position: relative;
+    }
+
+    /* 自定义展开/折叠图标 */
+    .jstree-default .jstree-closed > .jstree-ocl::before,
+    .jstree-default .jstree-open > .jstree-ocl::before {
+        content: '';
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border: 2px solid #adb5bd;  /* Bootstrap gray-500 */
+        border-radius: 2px;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.2s ease;
+    }
+
+    /* 加号/减号样式 */
+    .jstree-default .jstree-closed > .jstree-ocl::after,
+    .jstree-default .jstree-open > .jstree-ocl::after {
+        content: '';
+        position: absolute;
+        background: #adb5bd;  /* Bootstrap gray-500 */
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.2s ease;
+    }
+
+    /* 横线 */
+    .jstree-default .jstree-closed > .jstree-ocl::after,
+    .jstree-default .jstree-open > .jstree-ocl::after {
+        width: 6px;
+        height: 2px;
+    }
+
+    /* 竖线（仅用于关闭状态） */
+    .jstree-default .jstree-closed > .jstree-ocl::before {
+        background: white;
+    }
+    .jstree-default .jstree-closed > .jstree-ocl::after {
+        content: '';
+        width: 6px;
+        height: 2px;
+    }
+    .jstree-default .jstree-closed > .jstree-ocl::before {
+        content: '';
+        width: 2px;
+        height: 6px;
+        position: absolute;
+        background: #adb5bd;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    /* 悬停效果 */
+    .jstree-default .jstree-ocl:hover::before,
+    .jstree-default .jstree-ocl:hover::after {
+        border-color: #0d6efd;
+        background-color: #0d6efd;
+    }
+
+    /* 自定义连接线 */
+    .jstree-default .jstree-children {
+        position: relative;
+        margin-left: 0;
+        padding-left: 16px;
+    }
+
+    .jstree-default .jstree-children::before {
+        content: '';
+        position: absolute;
+        left: 8px;
+        top: 0;
+        bottom: 12px;
+        width: 1px;
+        background: var(--tree-line-color);
+    }
+
+    .jstree-default .jstree-children .jstree-node::before {
+        content: '';
+        position: absolute;
+        left: -8px;
+        top: 12px;
+        width: 8px;
+        height: 1px;
+        background: var(--tree-line-color);
+    }
+
+    /* 调整节点间距 */
+    .jstree-default .jstree-node {
+        margin: 4px 0;
+        position: relative;
+    }
+
+    /* 优化文件夹图标 */
+    .jstree-default .jstree-themeicon {
+        margin-right: 4px;
+    }
+
+    /* 选中和悬停状态 */
+    .jstree-default .jstree-hovered {
+        background: #e9ecef;
+        box-shadow: none;
+    }
+
+    .jstree-default .jstree-clicked {
+        background: #e7f1ff !important;
+        border-radius: 4px;
+    }
 </style>
 {% endblock %}
 
@@ -223,7 +419,12 @@
     
     <!-- 文件分类区域默认隐藏 -->
     <div class="form-group mt-4" id="categorySection" style="display: none;">
-        <label>文件分类</label>
+        <div class="d-flex justify-content-between align-items-center mb-2">
+            <label>文件分类</label>
+            <a href="{% url 'file_management:manage_categories' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-cog"></i> 分类管理
+            </a>
+        </div>
         <div class="d-flex">
             <div class="category-tree border rounded p-2" style="width: 300px; height: 300px; overflow: auto;">
                 <div id="categoryTree"></div>
@@ -553,7 +754,7 @@
             newCategoryModal.show();
         });
 
-        // 监听模态框���闭事件，清空输入
+        // 监听模态框闭事件，空输入
         $('#newCategoryModal').on('hidden.bs.modal', function () {
             $('#categoryName').val('');
         });

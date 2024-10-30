@@ -1,0 +1,428 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+<style>
+    #categoryTree {
+        min-height: 200px;
+        border: 1px solid #ddd;
+        padding: 10px;
+        margin-top: 20px;
+    }
+    
+    /* jsTree 基本样式 */
+    .jstree-default {
+        --tree-line-color: #e9ecef;
+        --icon-size: 16px;
+    }
+
+    /* 节点样式 */
+    .jstree-default .jstree-node {
+        margin-left: 15px;
+        min-height: 28px;
+        line-height: 28px;
+    }
+
+    .jstree-default .jstree-anchor {
+        height: 28px;
+        line-height: 28px;
+        padding: 0 4px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    /* 第一层级（根节点）*/
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-anchor .jstree-themeicon {
+        color: #0d6efd;  /* Bootstrap primary */
+    }
+
+    /* 第二层级 */
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-anchor .jstree-themeicon {
+        color: #6610f2;  /* Bootstrap indigo */
+    }
+
+    /* 第三层级 */
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-children > .jstree-node > .jstree-anchor .jstree-themeicon {
+        color: #6f42c1;  /* Bootstrap purple */
+    }
+
+    /* 第四层级及更深 */
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-children > .jstree-node > .jstree-children .jstree-anchor .jstree-themeicon {
+        color: #8540d8;  /* 更浅的紫色 */
+    }
+
+    /* 悬停效果 */
+    .jstree-default .jstree-hovered {
+        background: #e9ecef;
+        box-shadow: none;
+    }
+
+    /* 选中效果 - 为不同层级设置不同的背景色 */
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-clicked {
+        background: #cfe2ff !important;  /* 第一层级 */
+    }
+
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-clicked {
+        background: #e0cfff !important;  /* 第二层级 */
+    }
+
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-children > .jstree-node > .jstree-clicked {
+        background: #e8d5ff !important;  /* 第三层级 */
+    }
+
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-children > .jstree-node > .jstree-children .jstree-clicked {
+        background: #f0e1ff !important;  /* 第四层级及更深 */
+    }
+
+    /* 自定义连接线 */
+    .jstree-default .jstree-children {
+        position: relative;
+        margin-left: 0;
+        padding-left: 16px;
+    }
+
+    .jstree-default .jstree-children::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 12px;
+        width: 1px;
+        background: var(--tree-line-color);
+    }
+
+    .jstree-default .jstree-children .jstree-node::before {
+        content: '';
+        position: absolute;
+        left: -8px;
+        top: 12px;
+        width: 8px;
+        height: 1px;
+        background: var(--tree-line-color);
+    }
+
+    /* 提示框样式 */
+    .alert {
+        margin-bottom: 15px;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h2>分类管理</h2>
+            
+            <!-- 项目选择 -->
+            <div class="mb-3">
+                <label for="projectSelect" class="form-label">选择项目</label>
+                <select class="form-select" id="projectSelect">
+                    <option value="">请选择项目</option>
+                    {% for project in projects %}
+                    <option value="{{ project.id }}">{{ project.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 分类树 -->
+            <div id="categoryTree"></div>
+
+            <!-- 添加分类按钮 -->
+            <button type="button" class="btn btn-primary mt-3" id="addCategoryBtn" disabled>
+                <i class="fas fa-plus"></i> 添加分类
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- 添加分类的模态框 -->
+<div class="modal fade" id="addCategoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">添加分类</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="categoryName" class="form-label">分类名称</label>
+                    <input type="text" class="form-control" id="categoryName">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">父分类</label>
+                    <div id="parentCategory">未选择（将创建为顶级分类）</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="saveCategoryBtn">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    let currentProjectId = null;
+    const addCategoryBtn = document.getElementById('addCategoryBtn');
+    let selectedCategoryId = null;
+
+    // 初始化分类树
+    function initCategoryTree(categories) {
+        const treeData = categories.map(category => ({
+            id: category.id.toString(),
+            parent: category.parent_id ? category.parent_id.toString() : '#',
+            text: category.name,
+            state: {
+                opened: true
+            },
+            icon: 'fas fa-folder'
+        }));
+
+        $('#categoryTree').jstree('destroy').jstree({
+            'core': {
+                'data': treeData,
+                'check_callback': true,
+                'themes': {
+                    'responsive': false,
+                    'variant': 'large'
+                }
+            },
+            'plugins': ['dnd', 'contextmenu', 'wholerow', 'types'],
+            'contextmenu': {
+                'items': function(node) {
+                    return {
+                        'edit': {
+                            'label': '编辑',
+                            'icon': 'fas fa-edit',
+                            'action': function() {
+                                // 获取节点元素和当前名称
+                                const nodeElement = $('#' + node.id);
+                                const currentName = node.text;
+                                const anchorElement = nodeElement.find('> a.jstree-anchor');
+                                const textElement = anchorElement.contents().filter(function() {
+                                    return this.nodeType === 3;  // 获取文本节点
+                                }).last();
+                                
+                                // 获取文本节点的宽度
+                                const textWidth = anchorElement.find('.jstree-anchor-text').width() || 
+                                                textElement.parent().width() - 24;  // 24px 是图标宽度
+                                
+                                // 创建输入框
+                                const inputElement = $('<input>', {
+                                    type: 'text',
+                                    class: 'form-control form-control-sm d-inline-block',
+                                    value: currentName,
+                                    style: `
+                                        height: 24px;
+                                        padding: 2px 5px;
+                                        margin: -2px 0;
+                                        width: ${textWidth + 30}px;
+                                        font-size: inherit;
+                                        border: 1px solid #ced4da;
+                                        border-radius: 3px;
+                                        display: inline-block;
+                                    `
+                                });
+
+                                // 替换文本为输入框
+                                textElement.replaceWith(inputElement);
+                                
+                                // 将光标移到文本末尾
+                                inputElement.focus();
+                                inputElement[0].setSelectionRange(currentName.length, currentName.length);
+
+                                // 处理输入框的失焦和回车事件
+                                inputElement.on('blur keyup', function(e) {
+                                    if (e.type === 'blur' || (e.type === 'keyup' && e.key === 'Enter')) {
+                                        const newName = $(this).val().trim();
+                                        if (newName && newName !== currentName) {
+                                            // 发送更新请求
+                                            fetch('/files/categories/update/', {
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                    'X-CSRFToken': csrfToken
+                                                },
+                                                body: JSON.stringify({
+                                                    id: node.id,
+                                                    name: newName
+                                                })
+                                            })
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                if (data.success) {
+                                                    // 更新节点名称
+                                                    $('#categoryTree').jstree('rename_node', node, newName);
+                                                } else {
+                                                    // 更新失败，恢复原名称
+                                                    inputElement.replaceWith(document.createTextNode(currentName));
+                                                    alert('更新失败：' + data.error);
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error('更新分类出错：', error);
+                                                // 发生错误，恢复原名称
+                                                inputElement.replaceWith(document.createTextNode(currentName));
+                                                alert('更新分类时发生错误');
+                                            });
+                                        } else {
+                                            // 名称未改变，恢复原文本
+                                            inputElement.replaceWith(document.createTextNode(currentName));
+                                        }
+                                    }
+                                });
+
+                                // 处理 ESC 键取消编辑
+                                inputElement.on('keyup', function(e) {
+                                    if (e.key === 'Escape') {
+                                        inputElement.replaceWith(document.createTextNode(currentName));
+                                    }
+                                });
+                            }
+                        },
+                        'delete': {
+                            'label': '删除',
+                            'icon': 'fas fa-trash-alt',
+                            'action': function() {
+                                const confirmDelete = confirm('确定要删除这个分类吗？\n注意：如果该分类下有子分类或文件，需要先处理它们。');
+                                if (confirmDelete) {
+                                    fetch('/files/categories/delete/', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRFToken': csrfToken
+                                        },
+                                        body: JSON.stringify({
+                                            id: node.id
+                                        })
+                                    })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            // 删除成功，从树中移除节点
+                                            $('#categoryTree').jstree('delete_node', node);
+                                            // 显示成功消息
+                                            alert('分类已成功删除');
+                                        } else {
+                                            // 显示具体的错误信息
+                                            alert('删除失败：' + (data.error || '未知错误'));
+                                        }
+                                    })
+                                    .catch(error => {
+                                        console.error('删除分类出错：', error);
+                                        alert('删除分类时发生错误，请检查网络连接或刷新页面重试');
+                                    });
+                                }
+                            }
+                        }
+                    };
+                }
+            }
+        }).on('select_node.jstree', function(e, data) {
+            selectedCategoryId = data.node.id;
+            const path = data.node.text;
+            $('#parentCategory').text(path);
+        });
+    }
+
+    // 加载项目分类
+    function loadProjectCategories(projectId) {
+        fetch(`/files/get-project-categories/?project_id=${projectId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    initCategoryTree(data.categories);
+                    addCategoryBtn.disabled = false;
+                } else {
+                    alert('加载分类失败：' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('加载分类出错：', error);
+                alert('加载分类时发生错误');
+            });
+    }
+
+    // 项目选择变化时重新加载分类
+    document.getElementById('projectSelect').addEventListener('change', function() {
+        currentProjectId = this.value;
+        selectedCategoryId = null;
+        $('#parentCategory').text('未选择（将创建为顶级分类）');
+        
+        if (currentProjectId) {
+            loadProjectCategories(currentProjectId);
+        } else {
+            $('#categoryTree').jstree('destroy').html('');
+            addCategoryBtn.disabled = true;
+        }
+    });
+
+    // 添加分类按钮点击事件
+    addCategoryBtn.addEventListener('click', function() {
+        $('#categoryName').val('');
+        $('#addCategoryModal').modal('show');
+    });
+
+    // 保存新分类
+    document.getElementById('saveCategoryBtn').addEventListener('click', function() {
+        const categoryName = document.getElementById('categoryName').value.trim();
+        
+        if (!categoryName) {
+            alert('请输入分类名称');
+            return;
+        }
+
+        if (!currentProjectId) {
+            alert('请先选择项目');
+            return;
+        }
+
+        // 发送创建分类请求
+        fetch('/files/create-category/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({
+                name: categoryName,
+                parent_id: selectedCategoryId,
+                project_id: currentProjectId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 关闭模态框
+                $('#addCategoryModal').modal('hide');
+                // 重新加载分类树
+                loadProjectCategories(currentProjectId);
+            } else {
+                alert('添加分类失败：' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('添加分类出错：', error);
+            alert('添加分类时发生错误');
+        });
+    });
+
+    // 监听模态框关闭事件，清空输入
+    $('#addCategoryModal').on('hidden.bs.modal', function() {
+        document.getElementById('categoryName').value = '';
+    });
+});
+</script>
+{% endblock %} 

@@ -157,45 +157,163 @@ def get_project_categories(request):
     """获取指定项目的分类树"""
     project_id = request.GET.get('project_id')
     if not project_id:
-        return JsonResponse({'error': '未指定项目'}, status=400)
+        return JsonResponse({'success': False, 'error': '未指定项目'}, status=400)
         
-    categories = FileCategory.objects.filter(project_id=project_id)
-    category_data = [
-        {
-            'id': str(category.id),
-            'parent': str(category.parent_id) if category.parent_id else '#',
-            'text': category.name
-        }
-        for category in categories
-    ]
-    
-    return JsonResponse(category_data, safe=False)
+    try:
+        categories = FileCategory.objects.filter(project_id=project_id)
+        category_data = [
+            {
+                'id': category.id,
+                'parent_id': category.parent_id,
+                'name': category.name
+            }
+            for category in categories
+        ]
+        
+        return JsonResponse({
+            'success': True,
+            'categories': category_data
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
 
 @custom_login_required
 def create_category(request):
-    if request.method == 'POST':
-        name = request.POST.get('name')
-        parent_id = request.POST.get('parent_id')
-        project_id = request.POST.get('project_id')  # 添加项目ID
+    """创建新分类"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': '不支持的请求方法'}, status=400)
+    
+    try:
+        # 打印接收到的数据，用于调试
+        print("Received data:", request.body.decode('utf-8'))
         
-        if not all([name, project_id]):
-            return JsonResponse({'error': '缺少必要参数'}, status=400)
-            
-        try:
-            category = FileCategory(
-                name=name,
-                project_id=project_id
-            )
-            if parent_id:
-                category.parent_id = parent_id
-            category.save()
-            
+        data = json.loads(request.body)
+        name = data.get('name')
+        project_id = data.get('project_id')
+        parent_id = data.get('parent_id')
+        
+        # 验证必要参数
+        if not name or not project_id:
             return JsonResponse({
+                'success': False, 
+                'error': f'缺少必要参数: name={name}, project_id={project_id}'
+            }, status=400)
+            
+        # 创建分类
+        category = FileCategory(
+            name=name,
+            project_id=project_id
+        )
+        
+        if parent_id:
+            try:
+                parent = FileCategory.objects.get(id=parent_id)
+                category.parent = parent
+            except FileCategory.DoesNotExist:
+                return JsonResponse({'success': False, 'error': '父分类不存在'}, status=400)
+        
+        category.save()
+        
+        return JsonResponse({
+            'success': True,
+            'category': {
                 'id': category.id,
                 'name': category.name,
                 'parent_id': category.parent_id
-            })
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
+            }
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': '无效的JSON数据'}, status=400)
+    except Exception as e:
+        print("Error creating category:", str(e))  # 添加错误日志
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+@custom_login_required
+def manage_categories(request):
+    """分类管理页面"""
+    context = {
+        'projects': Project.objects.all()  # 暂时显示所有项目
+    }
+    return render(request, 'file_management/manage_categories.html', context)
+
+@custom_login_required
+def delete_category(request):
+    """删除分类"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': '不支持的请求方法'}, status=400)
+    
+    try:
+        data = json.loads(request.body)
+        category_id = data.get('id')
+        
+        if not category_id:
+            return JsonResponse({'success': False, 'error': '未指定分类ID'}, status=400)
             
-    return JsonResponse({'error': '无效请求'}, status=400)
+        category = FileCategory.objects.get(id=category_id)
+        
+        # 检查是否有子分类
+        if category.children.exists():
+            return JsonResponse({
+                'success': False, 
+                'error': '该分类下还有子分类，请先删除子分类'
+            }, status=400)
+            
+        # 检查是否有关联的文件
+        if category.get_files().exists():
+            return JsonResponse({
+                'success': False, 
+                'error': '该分类下还有文件，请先移除或删除相关文件'
+            }, status=400)
+            
+        # 执行删除操作
+        category.delete()
+        return JsonResponse({'success': True})
+        
+    except FileCategory.DoesNotExist:
+        return JsonResponse({'success': False, 'error': '分类不存在'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+def update_category_order(request):
+    """更新分类顺序"""
+    if request.method != 'POST':
+        return JsonResponse({'error': '不支持的请求方法'}, status=400)
+    
+    try:
+        data = json.loads(request.body)
+        for item in data:
+            category = Category.objects.get(id=item['id'])
+            category.parent_id = item.get('parent_id')
+            category.order = item.get('order', 0)
+            category.save()
+        return JsonResponse({'success': True})
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@custom_login_required
+def update_category(request):
+    """更新分类名称"""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': '不支持的请求方法'}, status=400)
+    
+    try:
+        data = json.loads(request.body)
+        category_id = data.get('id')
+        new_name = data.get('name')
+        
+        if not all([category_id, new_name]):
+            return JsonResponse({'success': False, 'error': '参数不完整'}, status=400)
+            
+        category = FileCategory.objects.get(id=category_id)
+        category.name = new_name
+        category.save()
+        
+        return JsonResponse({'success': True})
+    except FileCategory.DoesNotExist:
+        return JsonResponse({'success': False, 'error': '分类不存在'}, status=404)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
