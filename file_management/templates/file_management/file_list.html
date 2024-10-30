@@ -65,13 +65,38 @@
                 </select>
             </div>
             
+            <!-- 添加分类筛选 -->
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">所有分类</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if selected_category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.get_full_path }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- 添加分类导航面包屑 -->
+            {% if current_category %}
+            <nav aria-label="breadcrumb" class="mt-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'file_management:file_list' %}">全部文件</a></li>
+                    {% for ancestor in current_category.get_ancestors %}
+                        <li class="breadcrumb-item"><a href="?category={{ ancestor.id }}">{{ ancestor.name }}</a></li>
+                    {% endfor %}
+                    <li class="breadcrumb-item active">{{ current_category.name }}</li>
+                </ol>
+            </nav>
+            {% endif %}
+            
             <!-- 搜索按钮 -->
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">搜索</button>
             </div>
             
             <!-- 清除筛选按钮 -->
-            {% if search_query or file_type or selected_project or date_range or uploader %}
+            {% if search_query or file_type or selected_project or date_range or uploader or selected_category %}
             <div class="col-md-2">
                 <a href="{% url 'file_management:file_list' %}" class="btn btn-secondary w-100">清除筛选</a>
             </div>
@@ -94,6 +119,7 @@
                 {% endif %}
             {% endif %}
             {% if uploader %}，上传者为 {{ uploader }}{% endif %}
+            {% if selected_category %}，分类为 {{ selected_category }}{% endif %}
         </p>
     </div>
 

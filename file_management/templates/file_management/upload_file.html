@@ -1,35 +1,10 @@
 {% extends 'base.html' %}
 
-{% block content %}
-<div class="upload-container">
-    <h1>上传文件</h1>
-    
-    <form action="{% url 'file_management:upload_file' %}" 
-          class="dropzone" 
-          id="myDropzone">
-        {% csrf_token %}
-        <div class="fallback">
-            <input name="file" type="file" multiple />
-        </div>
-    </form>
-
-    <div class="form-group mt-4">
-        <label for="project">选择项目</label>
-        <select id="project" class="form-control" required>
-            <option value="">请选择项目</option>
-            {% for project in projects %}
-                <option value="{{ project.id }}">{{ project.year }}-{{ project.name }}</option>
-            {% endfor %}
-        </select>
-    </div>
-    
-    <div class="form-group mt-4">
-        <label for="description">文件描述</label>
-        <textarea id="description" class="form-control" rows="3" placeholder="请输入文件描述"></textarea>
-    </div>
-    
-    <button id="submit-all" class="upload-button mt-3">上传文件</button>
-</div>
+{% block extra_css %}
+<!-- jsTree CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css" />
+<!-- Dropzone CSS -->
+<link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" />
 
 <style>
     .upload-container {
@@ -55,34 +30,6 @@
         padding: 20px;
     }
 
-    .dropzone .dz-message {
-        margin: 0;
-        text-align: center;
-    }
-
-    .dropzone .dz-message .dz-button {
-        color: #0d6efd;
-        font-size: 1.5rem;
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
-        font-weight: 500;
-    }
-
-    .form-group textarea {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ced4da;
-        border-radius: 8px;
-        resize: vertical;
-    }
-
     .upload-button {
         width: 100%;
         padding: 0.75rem;
@@ -99,197 +46,236 @@
         background-color: #0b5ed7;
     }
 
-    /* Dropzone 预览框样式 */
-    .dropzone .dz-preview {
-        margin: 10px;
-        min-height: 120px;
-        background: white;
-        padding: 10px;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    .category-tree {
+        background-color: #fff;
+    }
+
+    .jstree-default .jstree-clicked {
+        background-color: #e9ecef;
+    }
+
+    .selected-category-path {
+        padding: 8px;
+        background-color: #f8f9fa;
+        border-radius: 4px;
     }
 
     .dropzone .dz-preview .dz-image {
-        border-radius: 10px;
-        width: 120px;
-        height: 120px;
         position: relative;
-        display: block;
-        z-index: 10;
-        overflow: hidden;
-    }
-
-    .dropzone .dz-preview .dz-details {
-        padding: 1em;
-        position: relative;
-        z-index: 20;
-        text-align: center;
-    }
-
-    .dropzone .dz-preview .dz-details .dz-info {
-        background: rgba(255, 255, 255, 0.9);
-        padding: 5px 10px;
-        border-radius: 5px;
-        margin-top: 5px;
-    }
-
-    .dropzone .dz-preview .dz-details .dz-filename {
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        color: #333;
-        font-weight: bold;
-        margin-bottom: 3px;
-    }
-
-    .dropzone .dz-preview .dz-details .dz-size {
-        font-size: 0.9em;
-        color: #666;
-    }
-
-    .dropzone .dz-preview .dz-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .dropzone .dz-preview .dz-remove {
-        margin-top: 10px;
-        display: block;
-        text-align: center;
-        color: #dc3545;
-        text-decoration: none;
-        font-size: 0.9em;
-    }
-
-    .dropzone .dz-preview .dz-remove:hover {
-        text-decoration: underline;
-    }
-
-    .dropzone .dz-preview .dz-progress {
-        width: 100%;
-        height: 6px;
-        background: #f0f0f0;
-        border-radius: 3px;
-        margin-top: 10px;
-    }
-
-    .dropzone .dz-preview .dz-progress .dz-upload {
-        display: block;
-        height: 100%;
-        width: 0;
-        background: #0d6efd;
-        border-radius: 3px;
-        transition: width 0.3s ease;
-    }
-
-    .dropzone .dz-preview .dz-success-mark,
-    .dropzone .dz-preview .dz-error-mark {
-        text-align: center;
-        margin-top: 10px;
-    }
-
-    .dropzone .dz-preview .dz-success-mark {
-        color: #28a745;
-    }
-
-    .dropzone .dz-preview .dz-error-mark {
-        color: #dc3545;
-    }
-
-    /* 文件类型图标样式 */
-    .dropzone .dz-preview .dz-image {
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #f8f9fa;
         width: 120px;
         height: 120px;
     }
 
     .dropzone .dz-preview .dz-image i {
-        font-size: 4.5rem;
-        color: #0d6efd;
-        padding: 20px;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background-color: #f8f9fa;
-    }
-
-    .dropzone .dz-preview.dz-file-preview .dz-image {
-        border-radius: 8px;
-    }
-
-    /* 调整文件名显示位置 */
-    .dropzone .dz-preview .dz-details {
-        padding-top: 0.5em;
-        text-align: center;
-    }
-
-    .dropzone .dz-preview .dz-details .dz-filename {
-        margin-top: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .dropzone .dz-preview .dz-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-        border-radius: 8px;
-    }
-
-    /* 添加项目选择下拉框的样式 */
-    #project {
-        width: 100%;
-        padding: 0.75rem;
-        border: 1px solid #ced4da;
-        border-radius: 8px;
-        font-size: 1rem;
-    }
-
-    /* 文件类型图标颜色 */
-    .dropzone .dz-preview .dz-image i.fa-file-word {
-        color: #2b579a;  /* Word蓝色 */
-    }
-
-    .dropzone .dz-preview .dz-image i.fa-file-excel {
-        color: #217346;  /* Excel绿色 */
-    }
-
-    .dropzone .dz-preview .dz-image i.fa-file-powerpoint {
-        color: #d24726;  /* PPT橙红色 */
+        font-size: 3rem;
     }
 
     .dropzone .dz-preview .dz-image i.fa-file-pdf {
-        color: #f40f02;  /* PDF红色 */
+        color: #dc3545;
+    }
+
+    .dropzone .dz-preview .dz-image i.fa-file-word {
+        color: #0d6efd;
+    }
+
+    .dropzone .dz-preview .dz-image i.fa-file-excel {
+        color: #198754;
+    }
+
+    .dropzone .dz-preview .dz-image i.fa-file-powerpoint {
+        color: #fd7e14;
     }
 
     .dropzone .dz-preview .dz-image i.fa-file-video {
-        color: #7b68ee;  /* 视频紫色 */
+        color: #6f42c1;
     }
 
     .dropzone .dz-preview .dz-image i.fa-file-audio {
-        color: #ff69b4;  /* 音频粉色 */
+        color: #d63384;
     }
 
+    .dropzone .dz-preview .dz-image i.fa-file,
     .dropzone .dz-preview .dz-image i.fa-file-alt {
-        color: #696969;  /* 文本文件灰色 */
+        color: #6c757d;
     }
 
-    .dropzone .dz-preview .dz-image i.fa-file {
-        color: #a9a9a9;  /* 默认文件图标浅灰色 */
+    .jstree-default .jstree-icon.jstree-themeicon {
+        color: #0d6efd;  /* Bootstrap 主色调 */
+    }
+
+    .jstree-default .jstree-anchor {
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        padding: 4px;
+    }
+
+    .jstree-default .jstree-hovered {
+        background: #e9ecef;  /* Bootstrap 浅灰色 */
+        box-shadow: none;
+    }
+
+    .jstree-default .jstree-clicked {
+        background: #cfe2ff !important;  /* Bootstrap primary 浅色 */
+        box-shadow: none;
+    }
+
+    .jstree-default .jstree-icon.jstree-ocl {
+        color: #6c757d;  /* Bootstrap 次要文本颜色 */
+        transition: all 0.2s ease;
+    }
+
+    .jstree-default .jstree-closed > .jstree-ocl {
+        transform: rotate(-90deg);
+    }
+
+    .jstree-default .jstree-open > .jstree-ocl {
+        transform: rotate(0deg);
+    }
+
+    .jstree-default .jstree-themeicon-custom {
+        font-family: "Font Awesome 5 Free" !important;
+        font-weight: 900;
+    }
+
+    .jstree-default .jstree-node {
+        margin-left: 15px;
+    }
+
+    .jstree-default .jstree-container-ul > .jstree-node {
+        margin-left: 0;
+    }
+
+    /* 第一层级（根节点）*/
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-anchor .jstree-themeicon {
+        color: #0d6efd;  /* Bootstrap primary */
+    }
+
+    /* 第二层级 */
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-anchor .jstree-themeicon {
+        color: #6610f2;  /* Bootstrap indigo */
+    }
+
+    /* 第三层级 */
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-children > .jstree-node > .jstree-anchor .jstree-themeicon {
+        color: #6f42c1;  /* Bootstrap purple */
+    }
+
+    /* 第四层级及更深 */
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-children > .jstree-node > .jstree-children .jstree-anchor .jstree-themeicon {
+        color: #8540d8;  /* 更浅的紫色 */
+    }
+
+    /* 悬停效果 */
+    .jstree-default .jstree-hovered {
+        background: #e9ecef;
+        box-shadow: none;
+    }
+
+    /* 选中效果 - 为不同层级设置不同的背景色 */
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-clicked {
+        background: #cfe2ff !important;  /* 第一层级 */
+    }
+
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-clicked {
+        background: #e0cfff !important;  /* 第二层级 */
+    }
+
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-children > .jstree-node > .jstree-clicked {
+        background: #e8d5ff !important;  /* 第三层级 */
+    }
+
+    .jstree-default .jstree-container-ul > .jstree-node > .jstree-children > .jstree-node > .jstree-children > .jstree-node > .jstree-children .jstree-clicked {
+        background: #f0e1ff !important;  /* 第四层级及更深 */
     }
 </style>
+{% endblock %}
 
-<!-- 引入 Dropzone CSS 和 JS -->
-<link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
+{% block content %}
+<div class="upload-container">
+    <h1>上传文件</h1>
+    
+    <form action="{% url 'file_management:upload_file' %}" 
+          class="dropzone" 
+          id="myDropzone">
+        {% csrf_token %}
+        <div class="fallback">
+            <input name="file" type="file" multiple />
+        </div>
+    </form>
+
+    <div class="form-group mt-4">
+        <label for="project">选择项目（可选）</label>
+        <select id="project" class="form-control">
+            <option value="">不属于任何项目</option>
+            {% for project in projects %}
+                <option value="{{ project.id }}">{{ project.year }}-{{ project.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+    
+    <div class="form-group mt-4">
+        <label for="description">文件描述</label>
+        <textarea id="description" class="form-control" rows="3" placeholder="请输入文件描述"></textarea>
+    </div>
+    
+    <!-- 文件分类区域默认隐藏 -->
+    <div class="form-group mt-4" id="categorySection" style="display: none;">
+        <label>文件分类</label>
+        <div class="d-flex">
+            <div class="category-tree border rounded p-2" style="width: 300px; height: 300px; overflow: auto;">
+                <div id="categoryTree"></div>
+            </div>
+            <div class="ms-3 flex-grow-1">
+                <div class="selected-category-path mb-2">
+                    当前选择：<span id="selectedCategoryPath">未选择</span>
+                </div>
+                <button type="button" class="btn btn-outline-primary" id="newCategoryBtn">
+                    <i class="fas fa-folder-plus"></i> 新建子分类
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 新建分类的模态框 -->
+    <div class="modal fade" id="newCategoryModal" tabindex="-1" aria-labelledby="newCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newCategoryModalLabel">新建分类</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="categoryName" class="form-label">分类名称</label>
+                        <input type="text" class="form-control" id="categoryName">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">父分类</label>
+                        <div id="parentCategoryPath">未选择</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="createCategory">创建</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <button id="submit-all" class="upload-button mt-3">上传文件</button>
+</div>
+
+<!-- JS 依赖，注意顺序很重要 -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js"></script>
 <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
 
+<!-- 页面脚本 -->
 <script>
     Dropzone.autoDiscover = false;
 
@@ -335,7 +321,11 @@
                     }
                     
                     const previewElement = file.previewElement;
-                    const icon = previewElement.querySelector(".dz-image i");
+                    let icon = previewElement.querySelector(".dz-image i");
+                    if (!icon) {
+                        icon = document.createElement('i');
+                        previewElement.querySelector(".dz-image").appendChild(icon);
+                    }
                     const img = previewElement.querySelector(".dz-image img");
                     
                     if (file.type.match(/image\/.*/)) {
@@ -347,45 +337,51 @@
                         img.style.display = "none";
                         icon.style.display = "flex";
                         
-                        // 设置对应的文件类型图标和颜色
+                        // 根据文件类型设置对应的图标和类名
+                        let iconClass = "fas fa-file";
                         if (file.type.match(/application\/pdf/)) {
-                            icon.className = "fas fa-file-pdf";
-                        } else if (file.type.match(/application\/msword/) || 
-                                     file.type.match(/application\/vnd.openxmlformats-officedocument.wordprocessingml.*/)) {
-                            icon.className = "fas fa-file-word";
-                        } else if (file.type.match(/application\/vnd.ms-excel/) || 
-                                     file.type.match(/application\/vnd.openxmlformats-officedocument.spreadsheetml.*/)) {
-                            icon.className = "fas fa-file-excel";
-                        } else if (file.type.match(/application\/vnd.ms-powerpoint/) || 
-                                     file.type.match(/application\/vnd.openxmlformats-officedocument.presentationml.*/)) {
-                            icon.className = "fas fa-file-powerpoint";
+                            iconClass = "fas fa-file-pdf";
+                        } else if (file.type.match(/application\/(msword|vnd.openxmlformats-officedocument.wordprocessingml.*)/)) {
+                            iconClass = "fas fa-file-word";
+                        } else if (file.type.match(/application\/(vnd.ms-excel|vnd.openxmlformats-officedocument.spreadsheetml.*)/)) {
+                            iconClass = "fas fa-file-excel";
+                        } else if (file.type.match(/application\/(vnd.ms-powerpoint|vnd.openxmlformats-officedocument.presentationml.*)/)) {
+                            iconClass = "fas fa-file-powerpoint";
                         } else if (file.type.match(/text\/.*/)) {
-                            icon.className = "fas fa-file-alt";
+                            iconClass = "fas fa-file-alt";
                         } else if (file.type.match(/video\/.*/)) {
-                            icon.className = "fas fa-file-video";
+                            iconClass = "fas fa-file-video";
                         } else if (file.type.match(/audio\/.*/)) {
-                            icon.className = "fas fa-file-audio";
-                        } else {
-                            icon.className = "fas fa-file";
+                            iconClass = "fas fa-file-audio";
                         }
+                        
+                        icon.className = iconClass;
                     }
                 });
             }
         });
 
-        // 修改发送前添加额外数据的处理
+        // 修改发送添加额外数据的处理
         myDropzone.on("sending", function(file, xhr, formData) {
             const description = document.querySelector("#description").value.trim();
             const projectId = document.querySelector("#project").value;
             formData.append("description", description);
-            formData.append("project_id", projectId);
+            
+            // 只有在选择了项目时才添加项目ID
+            if (projectId) {
+                formData.append("project_id", projectId);
+                // 只有在选择了项目和分类时才添加分类ID
+                if (selectedCategoryId) {
+                    formData.append("category_id", selectedCategoryId);
+                }
+            }
         });
 
         // 上传成功的处理
         myDropzone.on("success", function(file, response) {
             setTimeout(function() {
                 window.location.href = "{% url 'file_management:file_list' %}";
-            }, 500);  // 延迟半秒跳转，确保文件完全上传
+            }, 500);
         });
 
         // 上传失败的处理
@@ -398,7 +394,7 @@
             e.preventDefault();
             
             if (myDropzone.files.length === 0) {
-                alert("请选择要上传的文件");
+                alert("请择要上传的文件");
                 return;
             }
 
@@ -408,15 +404,159 @@
                 return;
             }
 
-            const projectId = document.querySelector("#project").value;
-            if (!projectId) {
-                alert("请选择项目");
+            // 移除项目和分类的必填验证
+            myDropzone.processQueue();
+        });
+        
+        // 初始化变量
+        let selectedCategoryId = null;
+        let currentProjectId = null;
+        
+        // 监听项目选择变化
+        $('#project').change(function() {
+            const projectId = $(this).val();
+            currentProjectId = projectId;
+            
+            if (projectId) {
+                // 显示分类区域
+                $('#categorySection').show();
+                // 加载项目的分类树
+                loadProjectCategories(projectId);
+            } else {
+                // 隐藏分类区域
+                $('#categorySection').hide();
+                selectedCategoryId = null;
+                $('#selectedCategoryPath').text('未选择');
+            }
+        });
+        
+        // 加载项目分类树
+        function loadProjectCategories(projectId) {
+            fetch(`{% url 'file_management:get_project_categories' %}?project_id=${projectId}`)
+                .then(response => response.json())
+                .then(data => {
+                    // 销毁现有的树
+                    if ($('#categoryTree').jstree(true)) {
+                        $('#categoryTree').jstree('destroy');
+                    }
+                    
+                    // 初始化新的树
+                    $('#categoryTree').jstree({
+                        'core': {
+                            'data': data,
+                            'themes': {
+                                'responsive': false,
+                                'variant': 'large',
+                                'stripes': false
+                            }
+                        },
+                        'themes': {
+                            'dots': false  // 移除连接线
+                        },
+                        'types': {
+                            'default': {
+                                'icon': 'fas fa-folder'  // 默认使用文件夹图标
+                            }
+                        },
+                        'plugins': ['types']
+                    }).on('select_node.jstree', function(e, data) {
+                        selectedCategoryId = data.node.id;
+                        let path = data.instance.get_path(data.node, ' > ');
+                        $('#selectedCategoryPath').text(path);
+                        $('#parentCategoryPath').text(path);
+                    }).on('deselect_node.jstree', function(e, data) {
+                        selectedCategoryId = null;
+                        $('#selectedCategoryPath').text('未选择');
+                        $('#parentCategoryPath').text('作为顶级分类');
+                    });
+                })
+                .catch(error => {
+                    console.error('加载分类失败:', error);
+                    alert('加载分类失败，请重试');
+                });
+        }
+        
+        // 监听分类选择事件
+        $('#categoryTree').on('select_node.jstree', function(e, data) {
+            selectedCategoryId = data.node.id;
+            let path = data.instance.get_path(data.node, ' > ');
+            $('#selectedCategoryPath').text(path);
+        });
+        
+        // 修改创建分类的代码
+        $('#createCategory').click(function() {
+            let name = $('#categoryName').val().trim();
+            if (!name) {
+                alert('请输入分类名称');
+                return;
+            }
+            
+            if (!currentProjectId) {
+                alert('请先选择项目');
                 return;
             }
 
-            myDropzone.processQueue();
+            // 创建 FormData 对象
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('project_id', currentProjectId);
+            if (selectedCategoryId) {
+                formData.append('parent_id', selectedCategoryId);
+            }
+
+            fetch('{% url "file_management:create_category" %}', {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                },
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络响应错误');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    throw new Error(data.error);
+                }
+                // 重新加载分类树并展开父节点
+                loadProjectCategories(currentProjectId);
+                // 关闭模态框
+                const modal = bootstrap.Modal.getInstance(document.getElementById('newCategoryModal'));
+                modal.hide();
+                // 清空输入
+                $('#categoryName').val('');
+            })
+            .catch(error => {
+                console.error('创建分类失败:', error);
+                alert('创建分类失败，请重试');
+            });
+        });
+
+        // 初始化模态框
+        const newCategoryModal = new bootstrap.Modal(document.getElementById('newCategoryModal'));
+
+        // 新建子分类按钮点击事件
+        $('#newCategoryBtn').click(function() {
+            // 移除必须选择父分类的验证
+            // 如果选择了分类，则显示父分类路径
+            if (selectedCategoryId) {
+                const path = $('#selectedCategoryPath').text();
+                $('#parentCategoryPath').text(path);
+            } else {
+                $('#parentCategoryPath').text('作为顶级分类');
+            }
+            
+            // 显示模态框
+            newCategoryModal.show();
+        });
+
+        // 监听模态框���闭事件，清空输入
+        $('#newCategoryModal').on('hidden.bs.modal', function () {
+            $('#categoryName').val('');
         });
     });
 </script>
 {% endblock %}
-
