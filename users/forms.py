@@ -34,7 +34,7 @@ class CustomUserCreationForm(UserCreationForm):
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField()
-    invitation_code = forms.CharField(max_length=20, required=True, help_text='请输入邀请码')
+    invitation_code = forms.CharField(max_length=20, required=True)
 
     class Meta:
         model = User
@@ -42,15 +42,34 @@ class RegisterForm(UserCreationForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # 设置中文标签
         self.fields['username'].label = '用户名'
         self.fields['email'].label = '电子邮箱'
         self.fields['password1'].label = '密码'
         self.fields['password2'].label = '确认密码'
         self.fields['invitation_code'].label = '邀请码'
-        self.fields['username'].help_text = '必填。150个字符或者更少。只能包含字母、数字和@/./+/-/_。'
-        self.fields['password1'].help_text = '您的密码不能与其他个人信息太相似。您的密码必须包含至少8个字符。您的密码不能是大家都爱用的常见密码。您的密码不能全部为数字。'
-        self.fields['password2'].help_text = '请再次输入密码，以确认您输入的密码。'
-        self.fields['invitation_code'].help_text = '请输入有效的邀请码'
+        
+        # 添加 Bootstrap 类和占位符文本
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': '请输入用户名'
+        })
+        self.fields['email'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': '请输入邮箱'
+        })
+        self.fields['password1'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': '请输入密码'
+        })
+        self.fields['password2'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': '请再次输入密码'
+        })
+        self.fields['invitation_code'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': '请输入邀请码'
+        })
 
     def clean_invitation_code(self):
         code = self.cleaned_data.get('invitation_code')
@@ -87,3 +106,30 @@ class UserProfileForm(forms.ModelForm):
             'birth_date': '出生日期',
             'bio': '个人简介',
         }
+
+
+class ProfileEditForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['real_name', 'gender', 'email', 'phone_number', 'birth_date', 'bio']
+        widgets = {
+            'birth_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'gender': forms.Select(attrs={'class': 'form-control'}),
+            'real_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        }
+        labels = {
+            'real_name': '真实姓名',
+            'gender': '性别',
+            'email': '电子邮箱',
+            'phone_number': '手机号码',
+            'birth_date': '出生日期',
+            'bio': '个人简介',
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['gender'].required = False
+        self.fields['gender'].choices = [('', '请选择')] + list(User.GENDER_CHOICES)

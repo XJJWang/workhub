@@ -7,7 +7,20 @@ import string
 
 
 class User(AbstractUser):
+    GENDER_CHOICES = [
+        ('M', '男'),
+        ('F', '女'),
+        ('O', '其他'),
+    ]
+    
     real_name = models.CharField(max_length=50, blank=True, verbose_name='真实姓名')
+    gender = models.CharField(
+        max_length=1, 
+        choices=GENDER_CHOICES, 
+        blank=True, 
+        null=True,
+        verbose_name='性别'
+    )
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     bio = models.TextField(max_length=500, blank=True)
     birth_date = models.DateField(null=True, blank=True)

@@ -29,6 +29,18 @@
                     <strong>个人简介：</strong>
                     <p>{{ user.bio|default:"未设置"|linebreaks }}</p>
                 </div>
+                <div class="mb-3">
+                    <strong>性别：</strong> 
+                    {% if user.gender == 'M' %}
+                        男
+                    {% elif user.gender == 'F' %}
+                        女
+                    {% elif user.gender == 'O' %}
+                        其他
+                    {% else %}
+                        未设置
+                    {% endif %}
+                </div>
                 <a href="{% url 'users:profile_edit' %}" class="btn btn-primary">编辑资料</a>
             </div>
         </div>
