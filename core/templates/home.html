@@ -1,43 +1,79 @@
 {% extends 'base.html' %}
 
-{% block title %}欢迎来到我的网站{% endblock %}
+{% block title %}高新宇的生日倒计时{% endblock %}
 
 {% block content %}
 <div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <h1 class="mt-5">欢迎来到我的网站</h1>
-            <p class="lead">这是一个使用 Django 和 Bootstrap 构建的网站主页。</p>
-        </div>
-    </div>
-    <div class="row mt-4">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">功能一</h5>
-                    <p class="card-text">这里描述网站的第一个主要功能。</p>
-                    <a href="#" class="btn btn-primary">了解更多</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">功能二</h5>
-                    <p class="card-text">这里描述网站的第二个主要功能。</p>
-                    <a href="#" class="btn btn-primary">了解更多</a>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">功能三</h5>
-                    <p class="card-text">这里描述网站的第三个主要功能。</p>
-                    <a href="#" class="btn btn-primary">了解更多</a>
+    <div class="row justify-content-center">
+        <div class="col-md-8 text-center">
+            <div class="mt-5">
+                <h1 class="display-4 mb-4">距离高新宇的生日还有</h1>
+                <div class="countdown-container">
+                    <div id="countdown" class="display-1 fw-bold text-primary"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function updateCountdown() {
+    const birthday = new Date(new Date().getFullYear(), 10, 1); // 月份是从0开始的，所以11月是10
+    // 如果今年的生日已经过了，就计算到明年的生日
+    if (birthday < new Date()) {
+        birthday.setFullYear(birthday.getFullYear() + 1);
+    }
+    
+    const now = new Date();
+    const diff = birthday - now;
+    
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+    
+    document.getElementById('countdown').innerHTML = 
+        `${days}天 ${hours}小时 ${minutes}分 ${seconds}秒`;
+}
+
+// 初始更新
+updateCountdown();
+// 每秒更新一次
+setInterval(updateCountdown, 1000);
+</script>
+
+<style>
+.countdown-container {
+    padding: 2rem;
+    border-radius: 1rem;
+    background-color: #f8f9fa;
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    margin-top: 2rem;
+}
+
+#countdown {
+    background: linear-gradient(45deg, #007bff, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+body {
+    background-color: #ffffff;
+    background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
+    background-size: 20px 20px;
+}
+</style>
 {% endblock %}
