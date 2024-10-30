@@ -8,6 +8,7 @@ class UploadedFile(models.Model):
     description = models.CharField(max_length=255, blank=True, null=True)  # 修改这里，允许为空
     uploaded_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # 更新为使用settings.AUTH_USER_MODEL
     uploaded_at = models.DateTimeField(auto_now_add=True)  # 上传时间
+    project = models.ForeignKey('project_management.Project', on_delete=models.SET_NULL, null=True, verbose_name='所属项目')  # 添加这行
 
     def save(self, *args, **kwargs):
         if not self.file_name and self.file:

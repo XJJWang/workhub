@@ -8,24 +8,67 @@ from django.db.models import Q
 from django.http import JsonResponse
 
 from project_management.models import Project
+from django.utils import timezone
+from datetime import timedelta
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 @custom_login_required
 def file_list(request):
     search_query = request.GET.get('search', '')
     file_type = request.GET.get('file_type', '')
+    project_id = request.GET.get('project', '')  # 添加项目筛选
+    date_range = request.GET.get('date_range', '')  # 添加日期范围筛选
+    uploader = request.GET.get('uploader', '')  # 添加上传者筛选
     
     files = UploadedFile.objects.all().order_by('-uploaded_at')
     
     if search_query:
-        files = files.filter(file__icontains=search_query)
+        # 扩展搜索范围到文件名、描述
+        files = files.filter(
+            Q(file_name__icontains=search_query) |
+            Q(description__icontains=search_query)
+        )
     
     if file_type:
-        files = files.filter(file__endswith=file_type)
+        # 处理多个文件类型的情况
+        if ',' in file_type:
+            file_types = file_type.split(',')
+            file_query = Q()
+            for ft in file_types:
+                file_query |= Q(file__endswith=ft)
+            files = files.filter(file_query)
+        else:
+            files = files.filter(file__endswith=file_type)
+    
+    if project_id:
+        files = files.filter(project_id=project_id)
+        
+    if uploader:
+        files = files.filter(uploaded_by__username__icontains=uploader)
+        
+    if date_range:
+        # 处理日期范围筛选
+        if date_range == 'today':
+            files = files.filter(uploaded_at__date=timezone.now().date())
+        elif date_range == 'week':
+            files = files.filter(uploaded_at__gte=timezone.now() - timedelta(days=7))
+        elif date_range == 'month':
+            files = files.filter(uploaded_at__gte=timezone.now() - timedelta(days=30))
+    
+    # 获取所有项目和上传者，用于筛选选项
+    projects = Project.objects.all().order_by('-year', 'name')
+    uploaders = User.objects.filter(uploadedfile__isnull=False).distinct()
     
     context = {
         'files': files,
         'search_query': search_query,
         'file_type': file_type,
+        'projects': projects,
+        'selected_project': project_id,
+        'date_range': date_range,
+        'uploader': uploader,
+        'uploaders': uploaders,
     }
     return render(request, 'file_management/file_list.html', context)
 @custom_login_required
@@ -41,12 +84,14 @@ def upload_file(request):
                 
             uploaded_file = request.FILES['file']
             description = request.POST.get('description', '')
+            project_id = request.POST.get('project_id')
             
             file_instance = UploadedFile(
                 file=uploaded_file,
                 file_name=uploaded_file.name,
                 description=description,
-                uploaded_by=request.user
+                uploaded_by=request.user,
+                project_id=project_id
             )
             file_instance.save()
             

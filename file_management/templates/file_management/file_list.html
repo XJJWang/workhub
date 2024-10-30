@@ -14,39 +14,88 @@
     <!-- 搜索表单 -->
     <form method="get" class="mb-4">
         <div class="row g-3">
+            <!-- 关键词搜索 -->
             <div class="col-md-4">
                 <input type="text" name="search" class="form-control" 
-                       placeholder="搜索文件名..." value="{{ search_query }}">
+                       placeholder="搜索文件名或描述..." value="{{ search_query }}">
             </div>
+            
+            <!-- 文件类型筛选 -->
             <div class="col-md-2">
                 <select name="file_type" class="form-select">
                     <option value="">所有类型</option>
                     <option value="pdf" {% if file_type == 'pdf' %}selected{% endif %}>PDF</option>
-                    <option value="doc" {% if file_type == 'doc' %}selected{% endif %}>Word</option>
-                    <option value="xls" {% if file_type == 'xls' %}selected{% endif %}>Excel</option>
+                    <option value="doc,docx" {% if file_type == 'doc,docx' %}selected{% endif %}>Word文档</option>
+                    <option value="xls,xlsx" {% if file_type == 'xls,xlsx' %}selected{% endif %}>Excel表格</option>
+                    <option value="ppt,pptx" {% if file_type == 'ppt,pptx' %}selected{% endif %}>PPT演示</option>
                 </select>
             </div>
+            
+            <!-- 项目筛选 -->
+            <div class="col-md-2">
+                <select name="project" class="form-select">
+                    <option value="">所有项目</option>
+                    {% for project in projects %}
+                        <option value="{{ project.id }}" {% if selected_project == project.id|stringformat:"s" %}selected{% endif %}>
+                            {{ project.year }}-{{ project.short_name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- 时间范围筛选 -->
+            <div class="col-md-2">
+                <select name="date_range" class="form-select">
+                    <option value="">所有时间</option>
+                    <option value="today" {% if date_range == 'today' %}selected{% endif %}>今天</option>
+                    <option value="week" {% if date_range == 'week' %}selected{% endif %}>最近一周</option>
+                    <option value="month" {% if date_range == 'month' %}selected{% endif %}>最近一月</option>
+                </select>
+            </div>
+            
+            <!-- 上传者筛选 -->
+            <div class="col-md-2">
+                <select name="uploader" class="form-select">
+                    <option value="">所有上传者</option>
+                    {% for user in uploaders %}
+                        <option value="{{ user.username }}" {% if uploader == user.username %}selected{% endif %}>
+                            {{ user.real_name|default:user.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- 搜索按钮 -->
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100">搜索</button>
             </div>
-            {% if search_query or file_type %}
+            
+            <!-- 清除筛选按钮 -->
+            {% if search_query or file_type or selected_project or date_range or uploader %}
             <div class="col-md-2">
-                <a href="{% url 'file_management:file_list' %}" class="btn btn-secondary w-100">清除</a>
+                <a href="{% url 'file_management:file_list' %}" class="btn btn-secondary w-100">清除筛选</a>
             </div>
             {% endif %}
         </div>
     </form>
 
     <!-- 搜索结果提示 -->
-    {% if search_query or file_type %}
     <div class="mb-3">
         <p>
-            {% if search_query %}搜索 "{{ search_query }}" {% endif %}
-            {% if file_type %}文件类型: {{ file_type }} {% endif %}
-            的结果：找到 {{ files|length }} 个文件
+            找到 {{ files|length }} 个文件
+            {% if search_query %}，关键词包含 "{{ search_query }}"{% endif %}
+            {% if file_type %}，文件类型为 {{ file_type }}{% endif %}
+            {% if selected_project %}，所属项目 {{ selected_project }}{% endif %}
+            {% if date_range %}
+                ，上传时间为
+                {% if date_range == 'today' %}今天
+                {% elif date_range == 'week' %}最近一周
+                {% elif date_range == 'month' %}最近一月
+                {% endif %}
+            {% endif %}
+            {% if uploader %}，上传者为 {{ uploader }}{% endif %}
         </p>
     </div>
-    {% endif %}
 
     <!-- 文件列表表格 -->
     {% if files %}
@@ -56,6 +105,7 @@
                 <tr>
                     <th>文件名</th>
                     <th>描述</th>
+                    <th>所属项目</th>
                     <th>上传者</th>
                     <th>上传时间</th>
                     <th>操作</th>
@@ -66,6 +116,7 @@
                 <tr>
                     <td>{{ file.file_name }}</td>
                     <td>{{ file.description|default:"-" }}</td>
+                    <td>{{ file.project.year }}-{{ file.project.short_name|default:"未分配" }}</td>
                     <td>{{ file.uploaded_by.real_name|default:file.uploaded_by.username }}</td>
                     <td>{{ file.uploaded_at|date:"Y-m-d H:i" }}</td>
                     <td>
