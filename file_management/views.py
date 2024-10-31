@@ -286,7 +286,7 @@ def update_category_order(request):
     try:
         data = json.loads(request.body)
         for item in data:
-            category = Category.objects.get(id=item['id'])
+            category = FileCategory.objects.get(id=item['id'])
             category.parent_id = item.get('parent_id')
             category.order = item.get('order', 0)
             category.save()
