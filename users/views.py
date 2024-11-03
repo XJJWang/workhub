@@ -4,7 +4,9 @@ from django.contrib import messages
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth import get_user_model
 from django.views.decorators.csrf import csrf_protect
+
 from users.decorators import custom_login_required 
+from core.utils import get_next_birthday, get_days_until_birthday
 from .forms import RegisterForm, UserProfileForm, ProfileEditForm
 
 User = get_user_model()
@@ -61,6 +63,16 @@ def profile_edit(request):
     return render(request, 'users/profile_edit.html', {'form': form})
 
 
+
 @custom_login_required
 def profile_view(request):
-    return render(request, 'users/profile.html', {'user': request.user})
+    user = request.user
+    next_birthday = get_next_birthday(user)
+    days_until_birthday = get_days_until_birthday(user)
+    
+    context = {
+        'user': user,
+        'next_birthday': next_birthday,
+        'days_until_birthday': days_until_birthday,
+    }
+    return render(request, 'users/profile.html', context)

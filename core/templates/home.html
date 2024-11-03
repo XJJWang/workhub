@@ -1,79 +1,206 @@
 {% extends 'base.html' %}
 
-{% block title %}高新宇的生日倒计时{% endblock %}
+{% block title %}WORKHUB - 首页{% endblock %}
 
-{% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <div class="mt-5">
-                <h1 class="display-4 mb-4">距离高新宇的生日还有</h1>
-                <div class="countdown-container">
-                    <div id="countdown" class="display-1 fw-bold text-primary"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-function updateCountdown() {
-    const birthday = new Date(new Date().getFullYear(), 10, 1); // 月份是从0开始的，所以11月是10
-    // 如果今年的生日已经过了，就计算到明年的生日
-    if (birthday < new Date()) {
-        birthday.setFullYear(birthday.getFullYear() + 1);
-    }
-    
-    const now = new Date();
-    const diff = birthday - now;
-    
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-    
-    document.getElementById('countdown').innerHTML = 
-        `${days}天 ${hours}小时 ${minutes}分 ${seconds}秒`;
-}
-
-// 初始更新
-updateCountdown();
-// 每秒更新一次
-setInterval(updateCountdown, 1000);
-</script>
-
+{% block extra_css %}
 <style>
-.countdown-container {
-    padding: 2rem;
-    border-radius: 1rem;
-    background-color: #f8f9fa;
-    box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    margin-top: 2rem;
-}
-
-#countdown {
-    background: linear-gradient(45deg, #007bff, #00ff88);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-    50% {
-        transform: scale(1.05);
-    }
-    100% {
-        transform: scale(1);
-    }
-}
-
 body {
     background-color: #ffffff;
     background-image: radial-gradient(#e0e0e0 1px, transparent 1px);
     background-size: 20px 20px;
 }
+
+.countdown-container {
+    padding: 2rem;
+    border-radius: 1rem;
+    background-color: rgba(248, 249, 250, 0.9);
+    box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    margin-top: 2rem;
+    backdrop-filter: blur(5px);
+}
+
+.countdown-grid {
+    display: flex;
+    justify-content: center;
+    gap: 1.5rem;
+}
+
+.countdown-item {
+    text-align: center;
+    min-width: 100px;
+}
+
+.countdown-number {
+    font-size: 3.5rem;
+    font-weight: bold;
+    background: linear-gradient(45deg, #007bff, #00ff88);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    animation: pulse 2s infinite;
+}
+
+.countdown-label {
+    font-size: 1.2rem;
+    color: #6c757d;
+    margin-top: 0.5rem;
+    font-weight: bold;
+}
+
+.birthday-container {
+    padding: 2rem;
+    border-radius: 1rem;
+    background-color: rgba(255, 245, 245, 0.9);
+    box-shadow: 0 0 20px rgba(255,105,180,0.2);
+    margin-top: 2rem;
+    animation: fadeIn 1s ease-in;
+    backdrop-filter: blur(5px);
+}
+
+.birthday-text {
+    background: linear-gradient(45deg, #ff69b4, #ff1493);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: bounce 2s infinite;
+}
+
+.birthday-wishes {
+    font-size: 1.5rem;
+    color: #ff69b4;
+    line-height: 1.8;
+    margin-top: 1rem;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+}
+
+@media (max-width: 768px) {
+    .countdown-grid {
+        gap: 1rem;
+    }
+    
+    .countdown-item {
+        min-width: 70px;
+    }
+    
+    .countdown-number {
+        font-size: 2.5rem;
+    }
+    
+    .countdown-label {
+        font-size: 1rem;
+    }
+}
 </style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8 col-md-10">
+        {% if nearest_user %}
+            {% if is_birthday %}
+                <div class="text-center" id="birthdaySection">
+                    <h1 class="display-4 mb-4">🎉 生日快乐 {{ nearest_user.real_name|default:nearest_user.username }} 🎉</h1>
+                    <div class="birthday-container">
+                        <div class="display-1 fw-bold birthday-text">祝你生日快乐！</div>
+                        <div class="mt-4 birthday-wishes">
+                            愿你永远快乐、幸福！<br>
+                            愿你所有的梦想都能实现！
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center" id="countdownSection">
+                    <h1 class="display-4 mb-4">
+                        距离 {{ nearest_user.real_name|default:nearest_user.username }} 的生日还有
+                    </h1>
+                    <div class="countdown-container">
+                        <div class="countdown-grid">
+                            <div class="countdown-item">
+                                <div id="countdown-days" class="countdown-number">{{ days_until_birthday }}</div>
+                                <div class="countdown-label">天</div>
+                            </div>
+                            <div class="countdown-item">
+                                <div id="countdown-hours" class="countdown-number">00</div>
+                                <div class="countdown-label">时</div>
+                            </div>
+                            <div class="countdown-item">
+                                <div id="countdown-minutes" class="countdown-number">00</div>
+                                <div class="countdown-label">分</div>
+                            </div>
+                            <div class="countdown-item">
+                                <div id="countdown-seconds" class="countdown-number">00</div>
+                                <div class="countdown-label">秒</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center">
+                <h1 class="display-4 mb-4">暂无用户设置生日信息</h1>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateCountdown() {
+    const countdownElement = document.getElementById('countdownSection');
+    if (!countdownElement) return;  // 如果是生日当天，倒计时元素不存在
+
+    // 获取目标日期（生日）
+    const targetDate = new Date('{{ next_birthday|date:"Y-m-d" }}');
+    targetDate.setHours(0, 0, 0, 0);
+
+    function update() {
+        const now = new Date();
+        const diff = targetDate - now;
+
+        if (diff <= 0) {
+            // 如果倒计时结束，刷新页面
+            window.location.reload();
+            return;
+        }
+
+        // 计算天、时、分、秒
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        // 更新显示
+        document.getElementById('countdown-days').textContent = String(days).padStart(2, '0');
+        document.getElementById('countdown-hours').textContent = String(hours).padStart(2, '0');
+        document.getElementById('countdown-minutes').textContent = String(minutes).padStart(2, '0');
+        document.getElementById('countdown-seconds').textContent = String(seconds).padStart(2, '0');
+    }
+
+    // 立即更新一次
+    update();
+    // 每秒更新一次
+    setInterval(update, 1000);
+}
+
+// 启动倒计时
+if (document.getElementById('countdownSection')) {
+    updateCountdown();
+}
+</script>
 {% endblock %}

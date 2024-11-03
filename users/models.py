@@ -13,6 +13,11 @@ class User(AbstractUser):
         ('O', '其他'),
     ]
     
+    CALENDAR_CHOICES = [
+        ('solar', '阳历'),
+        ('lunar', '农历'),
+    ]
+    
     real_name = models.CharField(max_length=50, blank=True, verbose_name='真实姓名')
     gender = models.CharField(
         max_length=1, 
@@ -20,6 +25,12 @@ class User(AbstractUser):
         blank=True, 
         null=True,
         verbose_name='性别'
+    )
+    calendar_type = models.CharField(
+        max_length=5,
+        choices=CALENDAR_CHOICES,
+        default='solar',
+        verbose_name='生日历法'
     )
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     bio = models.TextField(max_length=500, blank=True)

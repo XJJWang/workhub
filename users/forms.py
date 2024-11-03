@@ -111,10 +111,12 @@ class UserProfileForm(forms.ModelForm):
 class ProfileEditForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['real_name', 'gender', 'email', 'phone_number', 'birth_date', 'bio']
+        fields = ['real_name', 'gender', 'email', 'phone_number', 
+                 'birth_date', 'calendar_type', 'bio']
         widgets = {
             'birth_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'gender': forms.Select(attrs={'class': 'form-control'}),
+            'calendar_type': forms.Select(attrs={'class': 'form-control'}),
             'real_name': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
             'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
@@ -126,6 +128,7 @@ class ProfileEditForm(forms.ModelForm):
             'email': '电子邮箱',
             'phone_number': '手机号码',
             'birth_date': '出生日期',
+            'calendar_type': '生日历法',
             'bio': '个人简介',
         }
 
@@ -133,3 +136,5 @@ class ProfileEditForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['gender'].required = False
         self.fields['gender'].choices = [('', '请选择')] + list(User.GENDER_CHOICES)
+        self.fields['calendar_type'].required = False
+        self.fields['calendar_type'].choices = [('', '请选择')] + list(User.CALENDAR_CHOICES)
