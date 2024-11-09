@@ -131,58 +131,52 @@
 
         <button id="submit-all" class="upload-button mt-3">开始识别</button>
         
-        <!-- 状态显示区域 -->
-        <div id="status-container">
-            <!-- 进度显示 -->
-            <div id="progress-area" class="alert alert-info" style="display: none;">
-                <div class="d-flex align-items-center">
-                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                    <span>正在处理，请稍候...</span>
-                </div>
-            </div>
+        <!-- 永久提示信息 -->
+        <div class="alert alert-info mt-3">
+            处理文件时可能需要一些时间，尤其是当文件数量多时，请耐心等待。
+        </div>
 
-            <!-- 修改结果显示区域 -->
-            <div id="result-area" style="display: none;">
-                <!-- 成功消息 -->
-                <div class="alert alert-success">
-                    <p id="result-message" class="mb-2"></p>
-                </div>
-                
-                <!-- 结果表格 -->
-                <div class="table-responsive mt-3">
-                    <table class="table table-bordered table-hover">
-                        <thead class="table-light">
-                            <tr>
-                                <th>图片文件</th>
-                                <th>凭证编号</th>
-                                <th>日期</th>
-                                <th>收款人全称</th>
-                                <th>金额</th>
-                                <th>用途</th>
-                            </tr>
-                        </thead>
-                        <tbody id="result-table-body">
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- 添加统计信息 -->
-                <div class="alert alert-info mt-3">
-                    <p id="stats-message"></p>
-                </div>
-                
-                <!-- 下载按钮 -->
-                <div class="mt-3">
-                    <a id="download-link" href="#" class="btn btn-primary" download>
-                        <i class="fas fa-download me-1"></i>下载CSV文件
-                    </a>
-                </div>
+        <!-- 修改结果显示区域 -->
+        <div id="result-area" style="display: none;">
+            <!-- 成功消息 -->
+            <div class="alert alert-success">
+                <p id="result-message" class="mb-2"></p>
             </div>
+            
+            <!-- 结果表格 -->
+            <div class="table-responsive mt-3">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th>图片文件</th>
+                            <th>凭证编号</th>
+                            <th>日期</th>
+                            <th>收款人全称</th>
+                            <th>金额</th>
+                            <th>用途</th>
+                        </tr>
+                    </thead>
+                    <tbody id="result-table-body">
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 添加统计信息 -->
+            <div class="alert alert-info mt-3">
+                <p id="stats-message"></p>
+            </div>
+            
+            <!-- 下载按钮 -->
+            <div class="mt-3">
+                <a id="download-link" href="#" class="btn btn-primary" download>
+                    <i class="fas fa-download me-1"></i>下载CSV文件
+                </a>
+            </div>
+        </div>
 
-            <!-- 错误显示 -->
-            <div id="error-area" class="alert alert-danger" style="display: none;">
-                <p id="error-message"></p>
-            </div>
+        <!-- 错误显示 -->
+        <div id="error-area" class="alert alert-danger" style="display: none;">
+            <p id="error-message"></p>
         </div>
     </div>
 </div>
@@ -198,7 +192,6 @@
 
     $(document).ready(function() {
         // 获取所有需要的DOM元素
-        const progressArea = document.getElementById('progress-area');
         const resultArea = document.getElementById('result-area');
         const errorArea = document.getElementById('error-area');
         const resultMessage = document.getElementById('result-message');
@@ -240,18 +233,9 @@
             }
         });
 
-        // 处理上传开始
-        myDropzone.on("sendingMultiple", function() {
-            progressArea.style.display = 'block';
-            resultArea.style.display = 'none';
-            errorArea.style.display = 'none';
-            allResults = [];  // 清空之前的结果
-        });
-
         // 处理上传成功
         myDropzone.on("successmultiple", function(files, response) {
             console.log('识别完成:', response);
-            progressArea.style.display = 'none';
 
             if (response.status === 'success' && response.data) {
                 // 显示结果区域
@@ -259,7 +243,7 @@
                 resultMessage.textContent = `成功处理 ${response.data.length} 个文件`;
                 downloadLink.href = response.result_file;
 
-                // 清空并填��结果表格
+                // 清空并填结果表格
                 resultTableBody.innerHTML = '';
                 
                 // 添加所有识别结果
@@ -287,7 +271,7 @@
                 }, 0);
 
                 // 更新统计信息
-                statsMessage.textContent = `共处理 ${response.data.length} 个��件，总金额：¥${totalAmount.toFixed(2)}`;
+                statsMessage.textContent = `共处理 ${response.data.length} 个文件，总金额：¥${totalAmount.toFixed(2)}`;
 
                 // 清空上传区域
                 this.removeAllFiles();
@@ -300,7 +284,6 @@
         // 处理上传错误
         myDropzone.on("errormultiple", function(files, message) {
             console.error('识别错误:', message);
-            progressArea.style.display = 'none';
             errorArea.style.display = 'block';
             errorMessage.textContent = typeof message === 'string' ? message : '识别失败，请重试';
         });
@@ -355,7 +338,6 @@
 
         // 处理成功响应
         function handleSuccess(response) {
-            progressArea.style.display = 'none';
             resultArea.style.display = 'block';
             resultMessage.textContent = `成功处理 ${response.data.length} 个文件`;
             downloadLink.href = response.result_file;
@@ -393,7 +375,6 @@
 
         // 处理错误
         function handleError(message) {
-            progressArea.style.display = 'none';
             errorArea.style.display = 'block';
             errorMessage.textContent = message;
         }
