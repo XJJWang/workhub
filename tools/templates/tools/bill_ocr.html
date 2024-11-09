@@ -258,7 +258,7 @@
                         <td>${item['凭证编号'] || ''}</td>
                         <td>${item['日期'] || ''}</td>
                         <td>${item['收款人全称'] || ''}</td>
-                        <td>${item['金额'] || ''}</td>
+                        <td>${item['金额'] ? item['金额'].replace(/[¥￥,]/g, '') : ''}</td>
                         <td>${item['用途'] || ''}</td>
                     `;
                     resultTableBody.appendChild(row);
@@ -355,7 +355,7 @@
                     <td>${item['凭证编号'] || ''}</td>
                     <td>${item['日期'] || ''}</td>
                     <td>${item['收款人全称'] || ''}</td>
-                    <td>${item['金额'] || ''}</td>
+                    <td>${item['金额'] ? item['金额'].replace(/[¥￥,]/g, '') : ''}</td>
                     <td>${item['用途'] || ''}</td>
                 `;
                 resultTableBody.appendChild(row);
