@@ -227,6 +227,7 @@
                 <br>将凭证图片拖放到这里或点击选择文件<br>
                 <small class="text-muted">支持多个文件同时上传</small>
             `,
+            dictRemoveFile: "移除文件",
             acceptedFiles: 'image/*',
             method: 'post',
             timeout: 180000,
@@ -258,7 +259,7 @@
                 resultMessage.textContent = `成功处理 ${response.data.length} 个文件`;
                 downloadLink.href = response.result_file;
 
-                // 清空并填充结果表格
+                // 清空并填��结果表格
                 resultTableBody.innerHTML = '';
                 
                 // 添加所有识别结果
@@ -286,7 +287,7 @@
                 }, 0);
 
                 // 更新统计信息
-                statsMessage.textContent = `共处理 ${response.data.length} 个文件，总金额：¥${totalAmount.toFixed(2)}`;
+                statsMessage.textContent = `共处理 ${response.data.length} 个��件，总金额：¥${totalAmount.toFixed(2)}`;
 
                 // 清空上传区域
                 this.removeAllFiles();
