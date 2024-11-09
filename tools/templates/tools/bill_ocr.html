@@ -1,0 +1,415 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<!-- Dropzone CSS -->
+<link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" />
+
+<style>
+    .upload-container {
+        max-width: 800px;
+        margin: 2rem auto;
+        padding: 20px;
+    }
+
+    .dropzone {
+        border: 2px dashed #0d6efd !important;
+        border-radius: 15px;
+        background: #f8f9fa !important;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+
+    .upload-button {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+
+    .upload-button:hover {
+        background-color: #0b5ed7;
+    }
+
+    .dropzone .dz-preview .dz-image {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 120px;
+        height: 120px;
+    }
+
+    .dropzone .dz-preview .dz-image i {
+        font-size: 3rem;
+    }
+
+    /* 添加表格样式 */
+    .table {
+        font-size: 0.9rem;
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.05);
+    }
+
+    /* 调整容器样式 */
+    .upload-container {
+        max-width: 1200px;  /* 增加宽度以适应表格 */
+        margin: 2rem auto;
+        padding: 20px;
+    }
+
+    /* 添加表格响应式滚动条样式 */
+    .table-responsive {
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    /* 固定表头 */
+    .table thead th {
+        position: sticky;
+        top: 0;
+        background-color: #f8f9fa;
+        z-index: 1;
+    }
+
+    /* 美化金额显示 */
+    .table td:nth-child(5) {
+        text-align: right;
+        font-family: monospace;
+    }
+
+    /* 添加行间隔色 */
+    .table-striped tbody tr:nth-of-type(odd) {
+        background-color: rgba(0,0,0,.05);
+    }
+
+    /* 添加表格边框样式 */
+    .table-bordered {
+        border: 1px solid #dee2e6;
+    }
+
+    .table-bordered th,
+    .table-bordered td {
+        border: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="upload-container">
+        <h2 class="text-center mb-4">支付凭证识别</h2>
+        
+        <!-- 修改上传区域的 HTML -->
+        <form action="{% url 'tools:bill_ocr' %}" 
+              method="post" 
+              enctype="multipart/form-data" 
+              class="dropzone" 
+              id="myDropzone">
+            {% csrf_token %}
+        </form>
+
+        <button id="submit-all" class="upload-button mt-3">开始识别</button>
+        
+        <!-- 状态显示区域 -->
+        <div id="status-container">
+            <!-- 进度显示 -->
+            <div id="progress-area" class="alert alert-info" style="display: none;">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    <span>正在处理，请稍候...</span>
+                </div>
+            </div>
+
+            <!-- 修改结果显示区域 -->
+            <div id="result-area" style="display: none;">
+                <!-- 成功消息 -->
+                <div class="alert alert-success">
+                    <p id="result-message" class="mb-2"></p>
+                </div>
+                
+                <!-- 结果表格 -->
+                <div class="table-responsive mt-3">
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>图片文件</th>
+                                <th>凭证编号</th>
+                                <th>日期</th>
+                                <th>收款人全称</th>
+                                <th>金额</th>
+                                <th>用途</th>
+                            </tr>
+                        </thead>
+                        <tbody id="result-table-body">
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 添加统计信息 -->
+                <div class="alert alert-info mt-3">
+                    <p id="stats-message"></p>
+                </div>
+                
+                <!-- 下载按钮 -->
+                <div class="mt-3">
+                    <a id="download-link" href="#" class="btn btn-primary" download>
+                        <i class="fas fa-download me-1"></i>下载CSV文件
+                    </a>
+                </div>
+            </div>
+
+            <!-- 错误显示 -->
+            <div id="error-area" class="alert alert-danger" style="display: none;">
+                <p id="error-message"></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+
+<script>
+    // 禁用自动发现功能
+    Dropzone.autoDiscover = false;
+
+    $(document).ready(function() {
+        // 获取所有需要的DOM元素
+        const progressArea = document.getElementById('progress-area');
+        const resultArea = document.getElementById('result-area');
+        const errorArea = document.getElementById('error-area');
+        const resultMessage = document.getElementById('result-message');
+        const downloadLink = document.getElementById('download-link');
+        const errorMessage = document.getElementById('error-message');
+        const resultTableBody = document.getElementById('result-table-body');
+        const statsMessage = document.getElementById('stats-message');
+
+        // 用于存储所有文件的处理结果
+        let allResults = [];
+
+        // 修改 Dropzone 配置
+        const myDropzone = new Dropzone("#myDropzone", {
+            url: "{% url 'tools:bill_ocr' %}",
+            autoProcessQueue: false,
+            addRemoveLinks: true,
+            parallelUploads: 10,
+            uploadMultiple: true,
+            maxFiles: 10,
+            paramName: "files[]",  // 修改参数名格式
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+            },
+            dictDefaultMessage: `
+                <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                <br>将凭证图片拖放到这里或点击选择文件<br>
+                <small class="text-muted">支持多个文件同时上传</small>
+            `,
+            acceptedFiles: 'image/*',
+            method: 'post',
+            timeout: 180000,
+            init: function() {
+                this.on("sending", function(file, xhr, formData) {
+                    console.log('发送文件:', file.name);
+                    // 确保 CSRF token 被添加
+                    formData.append("csrfmiddlewaretoken", document.querySelector('[name=csrfmiddlewaretoken]').value);
+                });
+            }
+        });
+
+        // 处理上传开始
+        myDropzone.on("sendingMultiple", function() {
+            progressArea.style.display = 'block';
+            resultArea.style.display = 'none';
+            errorArea.style.display = 'none';
+            allResults = [];  // 清空之前的结果
+        });
+
+        // 处理上传成功
+        myDropzone.on("successmultiple", function(files, response) {
+            console.log('识别完成:', response);
+            progressArea.style.display = 'none';
+
+            if (response.status === 'success' && response.data) {
+                // 显示结果区域
+                resultArea.style.display = 'block';
+                resultMessage.textContent = `成功处理 ${response.data.length} 个文件`;
+                downloadLink.href = response.result_file;
+
+                // 清空并填充结果表格
+                resultTableBody.innerHTML = '';
+                
+                // 添加所有识别结果
+                response.data.forEach((item, index) => {
+                    const row = document.createElement('tr');
+                    // 为偶数行添加背景色
+                    if (index % 2 === 0) {
+                        row.classList.add('table-light');
+                    }
+                    row.innerHTML = `
+                        <td>${item['图片文件'] || ''}</td>
+                        <td>${item['凭证编号'] || ''}</td>
+                        <td>${item['日期'] || ''}</td>
+                        <td>${item['收款人全称'] || ''}</td>
+                        <td>${item['金额'] || ''}</td>
+                        <td>${item['用途'] || ''}</td>
+                    `;
+                    resultTableBody.appendChild(row);
+                });
+
+                // 计算总金额
+                const totalAmount = response.data.reduce((sum, item) => {
+                    const amount = item['金额'] ? parseFloat(item['金额'].replace(/[^0-9.-]/g, '')) : 0;
+                    return sum + (isNaN(amount) ? 0 : amount);
+                }, 0);
+
+                // 更新统计信息
+                statsMessage.textContent = `共处理 ${response.data.length} 个文件，总金额：¥${totalAmount.toFixed(2)}`;
+
+                // 清空上传区域
+                this.removeAllFiles();
+            } else {
+                errorArea.style.display = 'block';
+                errorMessage.textContent = response.message || '处理失败，请重试';
+            }
+        });
+
+        // 处理上传错误
+        myDropzone.on("errormultiple", function(files, message) {
+            console.error('识别错误:', message);
+            progressArea.style.display = 'none';
+            errorArea.style.display = 'block';
+            errorMessage.textContent = typeof message === 'string' ? message : '识别失败，请重试';
+        });
+
+        // 修改提交按钮处理
+        document.getElementById('submit-all').addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('点击提交按钮');
+            
+            if (myDropzone.files.length === 0) {
+                errorArea.style.display = 'block';
+                errorMessage.textContent = '请选择要识别的凭证图片';
+                return;
+            }
+
+            console.log('准备上传文件数量:', myDropzone.files.length);
+            console.log('文件列表:', myDropzone.files.map(f => f.name));
+
+            // 手动构建 FormData
+            const formData = new FormData();
+            myDropzone.files.forEach((file, index) => {
+                formData.append('files[]', file);
+                console.log(`添加文件 ${index + 1}:`, file.name);
+            });
+
+            // 添加 CSRF token
+            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+            // 使用 fetch API 手动发送请求
+            fetch("{% url 'tools:bill_ocr' %}", {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('服务器响应:', data);
+                // 处理响应数据
+                if (data.status === 'success' && data.data) {
+                    handleSuccess(data);
+                } else {
+                    handleError(data.message || '处理失败');
+                }
+            })
+            .catch(error => {
+                console.error('上传错误:', error);
+                handleError('上传失败，请重试');
+            });
+        });
+
+        // 处理成功响应
+        function handleSuccess(response) {
+            progressArea.style.display = 'none';
+            resultArea.style.display = 'block';
+            resultMessage.textContent = `成功处理 ${response.data.length} 个文件`;
+            downloadLink.href = response.result_file;
+
+            // 清空并填充结果表格
+            resultTableBody.innerHTML = '';
+            
+            response.data.forEach((item, index) => {
+                const row = document.createElement('tr');
+                if (index % 2 === 0) {
+                    row.classList.add('table-light');
+                }
+                row.innerHTML = `
+                    <td>${item['图片文件'] || ''}</td>
+                    <td>${item['凭证编号'] || ''}</td>
+                    <td>${item['日期'] || ''}</td>
+                    <td>${item['收款人全称'] || ''}</td>
+                    <td>${item['金额'] || ''}</td>
+                    <td>${item['用途'] || ''}</td>
+                `;
+                resultTableBody.appendChild(row);
+            });
+
+            // 更新统计信息
+            const totalAmount = response.data.reduce((sum, item) => {
+                const amount = item['金额'] ? parseFloat(item['金额'].replace(/[^0-9.-]/g, '')) : 0;
+                return sum + (isNaN(amount) ? 0 : amount);
+            }, 0);
+            
+            statsMessage.textContent = `共处理 ${response.data.length} 个文件，总金额：¥${totalAmount.toFixed(2)}`;
+
+            // 清空上传区域
+            myDropzone.removeAllFiles();
+        }
+
+        // 处理错误
+        function handleError(message) {
+            progressArea.style.display = 'none';
+            errorArea.style.display = 'block';
+            errorMessage.textContent = message;
+        }
+
+        // 添加更多事件监听器
+        myDropzone.on("sending", function(file, xhr, formData) {
+            console.log('正在发送文件:', file.name);
+            console.log('表单数据:', Array.from(formData.entries()));
+        });
+
+        myDropzone.on("complete", function(file) {
+            console.log('文件处理完成:', file.name);
+        });
+
+        myDropzone.on("error", function(file, errorMessage) {
+            console.error('文件处理错误:', file.name, errorMessage);
+        });
+    });
+</script>
+{% endblock %}

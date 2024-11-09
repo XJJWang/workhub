@@ -42,7 +42,16 @@
                     <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.url_name == 'file_management:file_list' %}active{% endif %}" href="{% url 'file_management:file_list' %}">文件管理</a>
                     </li>
-                    <!-- 添加更多导航项，并为每个项目添加active类判断 -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.resolver_match.app_name == 'tools' %}active{% endif %}" 
+                           href="#" id="toolsDropdown" role="button" 
+                           data-bs-toggle="dropdown" aria-expanded="false">
+                            工具集
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="toolsDropdown">
+                            <li><a class="dropdown-item" href="{% url 'tools:bill_ocr' %}">支付凭证识别</a></li>
+                        </ul>
+                    </li>
                 </ul>
                 
                 <ul class="navbar-nav">

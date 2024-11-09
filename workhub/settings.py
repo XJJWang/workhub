@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'widget_tweaks',
     'project_management',
     'mptt',
+    'tools',
 ]
 
 MIDDLEWARE = [
@@ -134,3 +135,19 @@ LOGIN_REDIRECT_URL = '/'  # 登录成功后重定向到首页
 LOGIN_URL = 'users:login' 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+TEMP_DIR = os.path.join(MEDIA_ROOT, 'temp')
+os.makedirs(TEMP_DIR, exist_ok=True)
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
